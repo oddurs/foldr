@@ -4,26 +4,23 @@
 
 ## v0.1 — v0.1 — Folder inspector
 
-`##········` 13% · 1 of 8 done
+`####······` 38% · 3 of 8 done
 
 Deliver a Rust CLI that inspects folders on macOS and Linux without modifying them. Exit: readable output, lossless structured output, capability explanations, and meaningful integration checks.
 
 ### planned
 
-- [ ] `0007` Model folder identity, properties, and capabilities <sup>feature · p0</sup>
-- [ ] `0008` Inspect macOS folder metadata and native flags <sup>feature · p1</sup>
-- [ ] `0009` Inspect Linux folder metadata and filesystem capabilities <sup>feature · p1</sup>
-- [ ] `0010` Deliver inspect and doctor commands <sup>feature · p1</sup>
-- [ ] `0011` Verify the read-only inspector release <sup>chore · p0</sup>
-
-### in progress
-
-- [ ] `0006` Set up the Rust core and CLI workspace <sup>chore · p0</sup>
-- [ ] `0026` Bootstrap and publish the public open-source repository <sup>chore · p0</sup>
+- [ ] [`0007`](https://github.com/oddurs/foldr/blob/main/cairn/items/0007-model-folder-identity-properties-and-capabilities.md) Model folder identity, properties, and capabilities <sup>feature · p0</sup>
+- [ ] [`0008`](https://github.com/oddurs/foldr/blob/main/cairn/items/0008-inspect-macos-folder-metadata-and-native-flags.md) Inspect macOS folder metadata and native flags <sup>feature · p1</sup>
+- [ ] [`0009`](https://github.com/oddurs/foldr/blob/main/cairn/items/0009-inspect-linux-folder-metadata-and-filesystem-capabilities.md) Inspect Linux folder metadata and filesystem capabilities <sup>feature · p1</sup>
+- [ ] [`0010`](https://github.com/oddurs/foldr/blob/main/cairn/items/0010-deliver-inspect-and-doctor-commands.md) Deliver inspect and doctor commands <sup>feature · p1</sup>
+- [ ] [`0011`](https://github.com/oddurs/foldr/blob/main/cairn/items/0011-verify-the-read-only-inspector-release.md) Verify the read-only inspector release <sup>chore · p0</sup>
 
 ### done
 
-- [x] `0005` Record CLI-first concept and Rust architecture <sup>docs · p0</sup>
+- [x] [`0005`](https://github.com/oddurs/foldr/blob/main/cairn/items/0005-record-cli-first-concept-and-rust-architecture.md) Record CLI-first concept and Rust architecture <sup>docs · p0</sup>
+- [x] [`0006`](https://github.com/oddurs/foldr/blob/main/cairn/items/0006-set-up-the-rust-core-and-cli-workspace.md) Set up the Rust core and CLI workspace <sup>chore · p0</sup>
+- [x] [`0026`](https://github.com/oddurs/foldr/blob/main/cairn/items/0026-bootstrap-and-publish-the-public-open-source-repository.md) Bootstrap and publish the public open-source repository <sup>chore · p0</sup>
 
 ## v0.2 — v0.2 — Edit folders and apply presets
 
@@ -33,12 +30,12 @@ Ship explicit, previewable single-folder edits with verification, conflict-aware
 
 ### planned
 
-- [ ] `0012` Implement change plans, verification, and conflict-aware undo <sup>feature · p0</sup>
-- [ ] `0013` Edit foldr-owned folder notes and custom metadata <sup>feature · p1</sup>
-- [ ] `0014` Edit supported native directory flags <sup>feature · p1</sup>
-- [ ] `0015` Edit basic directory permissions with scope explanations <sup>feature · p1</sup>
-- [ ] `0016` Save and apply versioned partial folder presets <sup>feature · p1</sup>
-- [ ] `0017` Verify editing, recovery, and first-use documentation <sup>chore · p0</sup>
+- [ ] [`0012`](https://github.com/oddurs/foldr/blob/main/cairn/items/0012-implement-change-plans-verification-and-conflict-aware-undo.md) Implement change plans, verification, and conflict-aware undo <sup>feature · p0</sup>
+- [ ] [`0013`](https://github.com/oddurs/foldr/blob/main/cairn/items/0013-edit-foldr-owned-folder-notes-and-custom-metadata.md) Edit foldr-owned folder notes and custom metadata <sup>feature · p1</sup>
+- [ ] [`0014`](https://github.com/oddurs/foldr/blob/main/cairn/items/0014-edit-supported-native-directory-flags.md) Edit supported native directory flags <sup>feature · p1</sup>
+- [ ] [`0015`](https://github.com/oddurs/foldr/blob/main/cairn/items/0015-edit-basic-directory-permissions-with-scope-explanations.md) Edit basic directory permissions with scope explanations <sup>feature · p1</sup>
+- [ ] [`0016`](https://github.com/oddurs/foldr/blob/main/cairn/items/0016-save-and-apply-versioned-partial-folder-presets.md) Save and apply versioned partial folder presets <sup>feature · p1</sup>
+- [ ] [`0017`](https://github.com/oddurs/foldr/blob/main/cairn/items/0017-verify-editing-recovery-and-first-use-documentation.md) Verify editing, recovery, and first-use documentation <sup>chore · p0</sup>
 
 ## v0.3 — v0.3 — Everyday CLI workflows
 
@@ -48,9 +45,9 @@ Make comparisons, batch application, installation, and shell use convenient with
 
 ### planned
 
-- [ ] `0018` Compare folder configuration and explain preset drift <sup>feature · p1</sup>
-- [ ] `0019` Apply explicit batch operations with per-folder recovery <sup>feature · p1</sup>
-- [ ] `0020` Package the CLI and polish shell integration <sup>chore · p1</sup>
+- [ ] [`0018`](https://github.com/oddurs/foldr/blob/main/cairn/items/0018-compare-folder-configuration-and-explain-preset-drift.md) Compare folder configuration and explain preset drift <sup>feature · p1</sup>
+- [ ] [`0019`](https://github.com/oddurs/foldr/blob/main/cairn/items/0019-apply-explicit-batch-operations-with-per-folder-recovery.md) Apply explicit batch operations with per-folder recovery <sup>feature · p1</sup>
+- [ ] [`0020`](https://github.com/oddurs/foldr/blob/main/cairn/items/0020-package-the-cli-and-polish-shell-integration.md) Package the CLI and polish shell integration <sup>chore · p1</sup>
 
 ## later — Later — Optional interfaces and filesystem experiments
 
@@ -60,9 +57,9 @@ Keep these as exploratory backlog items. A TUI or GUI is optional; advanced feat
 
 ### backlog
 
-- [ ] `0021` Explore rich inherited-access presets <sup>feature · p2</sup>
-- [ ] `0022` Explore filesystem-specific directory policies <sup>feature · p3</sup>
-- [ ] `0023` Explore optional folder automation <sup>feature · p3</sup>
-- [ ] `0024` Explore macOS appearance and Finder integration <sup>feature · p2</sup>
-- [ ] `0025` Evaluate an optional TUI or desktop interface <sup>feature · p3</sup>
+- [ ] [`0021`](https://github.com/oddurs/foldr/blob/main/cairn/items/0021-explore-rich-inherited-access-presets.md) Explore rich inherited-access presets <sup>feature · p2</sup>
+- [ ] [`0022`](https://github.com/oddurs/foldr/blob/main/cairn/items/0022-explore-filesystem-specific-directory-policies.md) Explore filesystem-specific directory policies <sup>feature · p3</sup>
+- [ ] [`0023`](https://github.com/oddurs/foldr/blob/main/cairn/items/0023-explore-optional-folder-automation.md) Explore optional folder automation <sup>feature · p3</sup>
+- [ ] [`0024`](https://github.com/oddurs/foldr/blob/main/cairn/items/0024-explore-macos-appearance-and-finder-integration.md) Explore macOS appearance and Finder integration <sup>feature · p2</sup>
+- [ ] [`0025`](https://github.com/oddurs/foldr/blob/main/cairn/items/0025-evaluate-an-optional-tui-or-desktop-interface.md) Evaluate an optional TUI or desktop interface <sup>feature · p3</sup>
 
