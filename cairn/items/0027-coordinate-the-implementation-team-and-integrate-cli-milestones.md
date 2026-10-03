@@ -3,11 +3,12 @@ id: 27
 uid: efd59519-3cca-4f99-9a3f-2b471e740453
 title: Coordinate the implementation team and integrate CLI milestones
 type: chore
-status: doing
+status: done
 milestone: v0.3
 assignee: integration-lead
 created: 2026-10-02
 updated: 2026-10-02
+closed_at: 2026-10-02
 priority: p0
 area: integration
 ---
@@ -23,9 +24,9 @@ Implement the planned v0.1-v0.3 CLI milestones with shared API contracts and dis
 ## Acceptance criteria
 
 - [x] Role ownership and a shared core/platform/CLI API contract are recorded.
-- [ ] Planned CLI functionality is integrated and verified on macOS and Linux.
-- [ ] Cairn reflects verified outcomes and any concrete limitations.
-- [ ] A reviewable implementation branch and pull request are published with passing checks.
+- [x] Planned CLI functionality is integrated and verified on macOS and Linux.
+- [x] Cairn reflects verified outcomes and any concrete limitations.
+- [x] A reviewable implementation branch and pull request are published with passing checks.
 
 ## 2026-10-02
 
@@ -46,3 +47,11 @@ Checkpoint ef2a449 published as draft PR https://github.com/oddurs/foldr/pull/1.
 ## 2026-10-02
 
 Final source fixes are integrated: descriptor traversal now uses search-only ancestors while final folder descriptors remain readable; symlink ancestors still refuse. Core and CLI hexadecimal formatting now pass exact Rust1.85.0 denied-warning Clippy. Root aggregate stable/MSRV formatting, full workspace lint and47 macOS tests pass; stable build, standalone real-filesystem walkthrough and denied-warning rustdoc pass. Both workflows pass actionlint. Remote native CI/package rerun will verify this source revision before release gates close.
+
+## 2026-10-02
+
+Team delivery is complete. Native source validation at a4f147c is green across all four macOS/Linux stable/MSRV jobs (CI37093137863), and all three native archives passed extracted-binary workflows/checksums (Packages37093137858). Inspector/edit/recovery/package gates0011/0017/0020 are closed with evidence. Public https://github.com/oddurs/foldr/pull/1 is ready for review. All planned v0.1-v0.3 CLI deliverables are implemented; optional UI/watchers/rich ACL and filesystem experiments remain explicitly later backlog. Native support, privilege limits, recovery race/identity caveats and unsigned artifacts are documented. No merge or public release was performed.
+
+## Result
+
+Four-role team delivered the complete planned Rust CLI with native macOS/Linux adapters, verified mutation/recovery, presets/diff/batches and native packages. All stable/MSRV and native archive checks passed; PR1 is ready for review, Cairn records evidence, and exploratory work remains backlog.
