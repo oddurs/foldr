@@ -5,6 +5,7 @@ title: Deliver inspect and doctor commands
 type: feature
 status: planned
 milestone: v0.1
+assignee: cli-engineer
 depends_on:
 - 8
 - 9

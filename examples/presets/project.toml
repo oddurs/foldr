@@ -1,0 +1,7 @@
+# Changes only the foldr-owned note on this folder.
+# Permissions, native flags, and all other metadata remain unchanged.
+schema_version = 1
+name = "project"
+
+[settings]
+note = "Project folder"

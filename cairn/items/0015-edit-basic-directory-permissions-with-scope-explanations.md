@@ -5,6 +5,7 @@ title: Edit basic directory permissions with scope explanations
 type: feature
 status: planned
 milestone: v0.2
+assignee: platform-engineer
 depends_on:
 - 12
 created: 2026-10-02

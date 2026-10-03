@@ -5,6 +5,7 @@ title: Verify the read-only inspector release
 type: chore
 status: planned
 milestone: v0.1
+assignee: integration-lead
 depends_on:
 - 10
 created: 2026-10-02

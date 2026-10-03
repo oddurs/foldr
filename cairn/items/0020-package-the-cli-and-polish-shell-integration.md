@@ -5,6 +5,7 @@ title: Package the CLI and polish shell integration
 type: chore
 status: planned
 milestone: v0.3
+assignee: integration-lead
 depends_on:
 - 17
 created: 2026-10-02

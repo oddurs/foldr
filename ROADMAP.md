@@ -4,50 +4,73 @@
 
 ## v0.1 — v0.1 — Folder inspector
 
-`####······` 38% · 3 of 8 done
+`########··` 75% · 9 of 12 done
 
 Deliver a Rust CLI that inspects folders on macOS and Linux without modifying them. Exit: readable output, lossless structured output, capability explanations, and meaningful integration checks.
 
 ### planned
 
-- [ ] [`0007`](https://github.com/oddurs/foldr/blob/main/cairn/items/0007-model-folder-identity-properties-and-capabilities.md) Model folder identity, properties, and capabilities <sup>feature · p0</sup>
-- [ ] [`0008`](https://github.com/oddurs/foldr/blob/main/cairn/items/0008-inspect-macos-folder-metadata-and-native-flags.md) Inspect macOS folder metadata and native flags <sup>feature · p1</sup>
-- [ ] [`0009`](https://github.com/oddurs/foldr/blob/main/cairn/items/0009-inspect-linux-folder-metadata-and-filesystem-capabilities.md) Inspect Linux folder metadata and filesystem capabilities <sup>feature · p1</sup>
 - [ ] [`0010`](https://github.com/oddurs/foldr/blob/main/cairn/items/0010-deliver-inspect-and-doctor-commands.md) Deliver inspect and doctor commands <sup>feature · p1</sup>
 - [ ] [`0011`](https://github.com/oddurs/foldr/blob/main/cairn/items/0011-verify-the-read-only-inspector-release.md) Verify the read-only inspector release <sup>chore · p0</sup>
+
+### in progress
+
+- [ ] [`0009`](https://github.com/oddurs/foldr/blob/main/cairn/items/0009-inspect-linux-folder-metadata-and-filesystem-capabilities.md) Inspect Linux folder metadata and filesystem capabilities <sup>feature · p1</sup>
 
 ### done
 
 - [x] [`0005`](https://github.com/oddurs/foldr/blob/main/cairn/items/0005-record-cli-first-concept-and-rust-architecture.md) Record CLI-first concept and Rust architecture <sup>docs · p0</sup>
 - [x] [`0006`](https://github.com/oddurs/foldr/blob/main/cairn/items/0006-set-up-the-rust-core-and-cli-workspace.md) Set up the Rust core and CLI workspace <sup>chore · p0</sup>
+- [x] [`0007`](https://github.com/oddurs/foldr/blob/main/cairn/items/0007-model-folder-identity-properties-and-capabilities.md) Model folder identity, properties, and capabilities <sup>feature · p0</sup>
+- [x] [`0008`](https://github.com/oddurs/foldr/blob/main/cairn/items/0008-inspect-macos-folder-metadata-and-native-flags.md) Inspect macOS folder metadata and native flags <sup>feature · p1</sup>
 - [x] [`0026`](https://github.com/oddurs/foldr/blob/main/cairn/items/0026-bootstrap-and-publish-the-public-open-source-repository.md) Bootstrap and publish the public open-source repository <sup>chore · p0</sup>
+- [x] [`0028`](https://github.com/oddurs/foldr/blob/main/cairn/items/0028-prepare-native-adapter-design-for-parallel-implementation.md) Prepare native adapter design for parallel implementation <sup>docs · p0</sup>
+- [x] [`0029`](https://github.com/oddurs/foldr/blob/main/cairn/items/0029-prepare-cli-grammar-and-output-contract.md) Prepare CLI grammar and output contract <sup>docs · p0</sup>
+- [x] [`0030`](https://github.com/oddurs/foldr/blob/main/cairn/items/0030-implement-descriptor-native-syscall-foundations.md) Implement descriptor-native syscall foundations <sup>chore · p0</sup>
+- [x] [`0032`](https://github.com/oddurs/foldr/blob/main/cairn/items/0032-prepare-cross-platform-verification-and-package-workflows.md) Prepare cross-platform verification and package workflows <sup>chore · p0</sup>
 
 ## v0.2 — v0.2 — Edit folders and apply presets
 
-`··········` 0% · 0 of 6 done
+`######····` 56% · 5 of 9 done
 
 Ship explicit, previewable single-folder edits with verification, conflict-aware undo, and reusable partial presets.
 
 ### planned
 
-- [ ] [`0012`](https://github.com/oddurs/foldr/blob/main/cairn/items/0012-implement-change-plans-verification-and-conflict-aware-undo.md) Implement change plans, verification, and conflict-aware undo <sup>feature · p0</sup>
+- [ ] [`0015`](https://github.com/oddurs/foldr/blob/main/cairn/items/0015-edit-basic-directory-permissions-with-scope-explanations.md) Edit basic directory permissions with scope explanations <sup>feature · p1</sup>
+- [ ] [`0017`](https://github.com/oddurs/foldr/blob/main/cairn/items/0017-verify-editing-recovery-and-first-use-documentation.md) Verify editing, recovery, and first-use documentation <sup>chore · p0</sup>
+
+### in progress
+
 - [ ] [`0013`](https://github.com/oddurs/foldr/blob/main/cairn/items/0013-edit-foldr-owned-folder-notes-and-custom-metadata.md) Edit foldr-owned folder notes and custom metadata <sup>feature · p1</sup>
 - [ ] [`0014`](https://github.com/oddurs/foldr/blob/main/cairn/items/0014-edit-supported-native-directory-flags.md) Edit supported native directory flags <sup>feature · p1</sup>
-- [ ] [`0015`](https://github.com/oddurs/foldr/blob/main/cairn/items/0015-edit-basic-directory-permissions-with-scope-explanations.md) Edit basic directory permissions with scope explanations <sup>feature · p1</sup>
-- [ ] [`0016`](https://github.com/oddurs/foldr/blob/main/cairn/items/0016-save-and-apply-versioned-partial-folder-presets.md) Save and apply versioned partial folder presets <sup>feature · p1</sup>
-- [ ] [`0017`](https://github.com/oddurs/foldr/blob/main/cairn/items/0017-verify-editing-recovery-and-first-use-documentation.md) Verify editing, recovery, and first-use documentation <sup>chore · p0</sup>
+
+### done
+
+- [x] [`0012`](https://github.com/oddurs/foldr/blob/main/cairn/items/0012-implement-change-plans-verification-and-conflict-aware-undo.md) Implement change plans, verification, and conflict-aware undo <sup>feature · p0</sup>
+- [x] [`0016`](https://github.com/oddurs/foldr/blob/main/cairn/items/0016-save-and-apply-versioned-partial-folder-presets.md) Save and apply versioned partial folder presets <sup>feature · p1</sup>
+- [x] [`0031`](https://github.com/oddurs/foldr/blob/main/cairn/items/0031-implement-the-shared-mutation-and-preset-engine-ahead-of-release-validation.md) Implement the shared mutation and preset engine ahead of release validation <sup>feature · p0</sup>
+- [x] [`0033`](https://github.com/oddurs/foldr/blob/main/cairn/items/0033-implement-cli-command-surfaces-against-agreed-core-contract.md) Implement CLI command surfaces against agreed core contract <sup>feature · p0</sup>
+- [x] [`0034`](https://github.com/oddurs/foldr/blob/main/cairn/items/0034-validate-recovery-schemas-and-malformed-plans-before-writes-and-persist-journal-directory-creation.md) Validate recovery schemas and malformed plans before writes and persist journal directory creation <sup>bug · p0</sup>
 
 ## v0.3 — v0.3 — Everyday CLI workflows
 
-`··········` 0% · 0 of 3 done
+`#####·····` 50% · 2 of 4 done
 
 Make comparisons, batch application, installation, and shell use convenient without requiring a background service.
 
 ### planned
 
-- [ ] [`0018`](https://github.com/oddurs/foldr/blob/main/cairn/items/0018-compare-folder-configuration-and-explain-preset-drift.md) Compare folder configuration and explain preset drift <sup>feature · p1</sup>
-- [ ] [`0019`](https://github.com/oddurs/foldr/blob/main/cairn/items/0019-apply-explicit-batch-operations-with-per-folder-recovery.md) Apply explicit batch operations with per-folder recovery <sup>feature · p1</sup>
 - [ ] [`0020`](https://github.com/oddurs/foldr/blob/main/cairn/items/0020-package-the-cli-and-polish-shell-integration.md) Package the CLI and polish shell integration <sup>chore · p1</sup>
+
+### in progress
+
+- [ ] [`0027`](https://github.com/oddurs/foldr/blob/main/cairn/items/0027-coordinate-the-implementation-team-and-integrate-cli-milestones.md) Coordinate the implementation team and integrate CLI milestones <sup>chore · p0</sup>
+
+### done
+
+- [x] [`0018`](https://github.com/oddurs/foldr/blob/main/cairn/items/0018-compare-folder-configuration-and-explain-preset-drift.md) Compare folder configuration and explain preset drift <sup>feature · p1</sup>
+- [x] [`0019`](https://github.com/oddurs/foldr/blob/main/cairn/items/0019-apply-explicit-batch-operations-with-per-folder-recovery.md) Apply explicit batch operations with per-folder recovery <sup>feature · p1</sup>
 
 ## later — Later — Optional interfaces and filesystem experiments
 

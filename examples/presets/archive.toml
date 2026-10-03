@@ -1,0 +1,7 @@
+# Changes only the foldr-owned note on this folder.
+# This labels the folder; it does not lock entries or change child files.
+schema_version = 1
+name = "archive"
+
+[settings]
+note = "Archived folder"

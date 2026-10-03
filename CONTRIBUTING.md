@@ -44,9 +44,13 @@ cargo build --workspace --locked
 cargo test --workspace --locked
 cargo run -p foldr-cli -- --help
 cargo run -p foldr-cli -- --version
+python3 scripts/verify-cli.py target/debug/foldr
 ```
 
 CI checks macOS and Linux with both stable Rust and the minimum supported version.
+Package jobs build and execute native binaries on Linux, Intel macOS, and Apple
+Silicon macOS. The standalone end-to-end verifier uses disposable folders and
+an isolated recovery directory; it never writes to your default recovery state.
 Add integration checks when introducing filesystem behavior. Use temporary test
 folders, preserve unrelated metadata, and report unsupported features explicitly.
 The core should not depend on terminal rendering or a graphical interface.

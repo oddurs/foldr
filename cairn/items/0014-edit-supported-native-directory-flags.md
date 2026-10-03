@@ -3,8 +3,9 @@ id: 14
 uid: a8d7eb14-2b0d-4c51-b535-ea06ae40f650
 title: Edit supported native directory flags
 type: feature
-status: planned
+status: doing
 milestone: v0.2
+assignee: platform-engineer
 depends_on:
 - 12
 created: 2026-10-02
@@ -25,5 +26,9 @@ Expose macOS hidden/uchg and Linux inode flags only with verified support and su
 ## Acceptance criteria
 
 - [ ] Supported toggles support dry-run, verification and undo.
-- [ ] Directory immutability is explained as entry protection rather than recursive content freezing.
+- [x] Directory immutability is explained as entry protection rather than recursive content freezing.
 - [ ] Unavailable writes name the capability or privilege requirement and cause no unrelated changes.
+
+## 2026-10-02
+
+macOS integration verified: simultaneous note+uchg applies metadata before lock and undo clears lock before restoring note; prelocked folder unlock+note edit applies unlock first and undo restores note before lock. Native immutable test confirms new-entry creation fails while existing child contents remain writable. Hidden apply/undo preserves unrelated binary metadata. All29 native macOS core tests and core clippy -Dwarnings pass. Linux native test verifies immutable toggle/undo when authorized or actionable CAP_LINUX_IMMUTABLE denial with unchanged flags and foreign metadata; pending native CI before closing cross-platform criterion1/3.

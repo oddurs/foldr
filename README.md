@@ -1,67 +1,167 @@
 # foldr
 
-A CLI-first folder inspector and configuration tool for macOS and Linux, written
-in Rust.
+A Rust CLI for inspecting and configuring folders on macOS and Linux.
 
-Folders carry more than filenames: permissions, extended attributes, native
-flags, inherited access rules, and filesystem-specific policies. Foldr aims to
-make those properties discoverable, explain their effects, and provide deliberate
-edits and reusable presets.
+See the properties behind a folder's name: permissions, extended attributes,
+native flags, ACL summaries, and filesystem capabilities. Edit notes, binary
+metadata, supported flags, and basic permissions; save partial presets; preview
+changes; and recover recorded edits.
 
-## Status
+## Try it
 
-Early development. The repository contains a Rust workspace, CLI help and version
-entry points, and a dependency-ordered implementation plan. Folder inspection and
-editing commands are planned; they are not implemented yet. A GUI or background
-service is not required.
-
-## Direction
-
-- Inspect folder properties and explain available capabilities.
-- Preserve unusual Unix filenames and binary metadata.
-- Edit notes, supported native flags, and basic permissions.
-- Preview changes and apply partial presets that preserve unrelated properties.
-- Verify writes and provide recovery with conflict-aware undo.
-
-The [roadmap](ROADMAP.md) is generated from [Cairn items](cairn/items).
-The [concept and architecture](cairn/items/0005-record-cli-first-concept-and-rust-architecture.md)
-describe the intended behavior and release boundaries.
-
-## Development
-
-Install Rust through [rustup](https://rustup.rs/). The minimum supported Rust
-version is 1.85; the development toolchain tracks stable. Initial targets are
-macOS and Linux, with CI covering both stable Rust and the minimum version.
+Install from a checkout with Rust 1.85 or newer:
 
 ```sh
-cargo build --workspace --locked
-cargo run -p foldr-cli -- --help
-cargo run -p foldr-cli -- --version
+cargo install --path crates/foldr-cli --locked
+foldr --help
 ```
 
-Run the local checks:
+Create a disposable folder for the walkthrough. Resolve its path because macOS
+commonly makes `/tmp` and `/var` symbolic links:
+
+```sh
+foldr_demo_dir=$(mktemp -d)
+foldr_demo_dir=$(cd "$foldr_demo_dir" && pwd -P)
+
+foldr inspect "$foldr_demo_dir"
+foldr doctor "$foldr_demo_dir"
+foldr note set "$foldr_demo_dir" "An inbox for incoming documents" --dry-run
+foldr note set "$foldr_demo_dir" "An inbox for incoming documents"
+foldr note get "$foldr_demo_dir"
+foldr attr set "$foldr_demo_dir" category inbox
+foldr permissions set "$foldr_demo_dir" 0700 --dry-run
+```
+
+Save selected fields and preview a preset on another folder:
+
+```sh
+foldr preset save "$foldr_demo_dir" --output inbox.toml --fields note,attrs
+foldr preset show inbox.toml
+foldr preset apply inbox.toml /absolute/path/to/another-folder --dry-run
+```
+
+Review recorded edits before undoing one:
+
+```sh
+foldr undo history
+foldr undo show CHANGE_ID
+foldr undo apply CHANGE_ID --dry-run
+foldr undo apply CHANGE_ID
+```
+
+## Commands
+
+| Command | Purpose |
+| --- | --- |
+| `inspect PATH` | Read identity, modes, filesystem, ACLs, flags, attributes, and capabilities |
+| `doctor PATH` | Explain support and limitations for this folder |
+| `note get/set/remove PATH` | Read and edit the folder note |
+| `attr get/set/remove PATH KEY` | Read and edit metadata in foldr's namespace; `set --hex` accepts binary values |
+| `flags set PATH` | Set native flags using `--hidden true/false` or `--immutable true/false` |
+| `permissions set PATH OCTAL` | Change the selected directory's mode |
+| `preset save/show/apply/import/export` | Work with versioned, human-editable TOML presets |
+| `undo history/show/apply` | Inspect recovery records and restore recorded fields |
+| `diff LEFT RIGHT` | Compare folders, JSON snapshots (`--snapshot`), or a folder and preset (`--preset`) |
+| `completions SHELL` | Generate shell completions |
+| `man` | Generate the manual page |
+
+Use `foldr COMMAND --help` for exact arguments. Mutation commands accept
+`--dry-run`; preset application accepts an explicit list of folders and never
+selects descendants implicitly. [Example presets](examples/presets) include
+project, archive, and private settings.
+
+## Scope and recovery
+
+Presets are patches: omitted settings stay untouched. Foldr writes only its own
+attributes (`com.foldr.*` on macOS, `user.foldr.*` on Linux), preserves unrelated
+native flags, and does not change existing child permissions. A directory's
+immutable flag protects its entries; existing files can remain editable.
+
+Inspection follows directory symlinks and reports a target when the final path is
+a link. Mutations refuse symlink components unless `--follow-symlink` is explicitly
+provided. Native operations use an open directory handle; applying a plan checks
+that the directory identity and observed fields still match.
+
+Changes are verified and recorded before and after writes in a private recovery
+directory. A group of filesystem writes is not atomic: partial failure records
+which fields were applied. Undo restores recorded fields only when their current
+values match the recorded post-change values. It does not overwrite unrelated
+metadata or intervening edits.
+
+Basic permission editing requires owner read and search bits to remain enabled
+(`0500`), so recovery can reopen the directory. It refuses changes when an
+extended ACL needs review or the ACL cannot be read. Rich ACL editing is tracked
+as future work.
+
+Support depends on the filesystem, mount options, and current user. macOS Finder
+hiding is a native flag; Linux dot-name hiding requires a rename and is not a
+flag toggle. Linux immutable writes can require additional privileges. Inspection
+never tests write support by modifying a folder, so some write capabilities are
+reported as unknown until an edit is attempted. Unsupported operations explain
+their limitation; foldr does not automatically elevate privileges.
+
+## Output and state
+
+Add `--json` for versioned machine output:
+
+```sh
+foldr inspect ./some-folder --json
+```
+
+Successful data uses `{ "schema_version": 1, "command": "...", "data": ... }`.
+Diagnostics go to stderr. JSON preserves Unix path bytes and binary attribute
+values as byte arrays; human output escapes terminal control characters. A closed
+downstream pipe exits cleanly. Help, version, completions, and man output are text
+documents; completions and man reject `--json`.
+
+Exit codes: `0` success, `1` operational failure, `2` invalid input, `3` unsupported
+operation, `4` conflict, `5` partial operation or failed batch target. Batch output
+includes per-target results; other targets can succeed when one target fails.
+
+Recovery state defaults to `~/Library/Application Support/foldr/history` on macOS
+and `$XDG_STATE_HOME/foldr` or `~/.local/state/foldr` on Linux. Override it with
+`--state-dir PATH` or `FOLDR_STATE_DIR`. Keep state outside the folder being edited.
+An existing state directory must be private and owned by the current user.
+
+Folder metadata may be lost in Git, archives, cross-filesystem copies, or sync
+tools. Preset import/export is explicit; it uses TOML and preserves binary values.
+
+## Development and packages
+
+The workspace separates `foldr-core` (models, native adapters, changes, presets,
+recovery) from `foldr-cli` (commands and output). The development toolchain tracks
+stable Rust; CI checks stable and the Rust 1.85 minimum on macOS and Linux.
 
 ```sh
 cargo fmt --all --check
 cargo clippy --workspace --all-targets --locked -- -D warnings
 cargo test --workspace --locked
+cargo build --workspace --locked
+python3 scripts/verify-cli.py target/debug/foldr
 ```
 
-## Architecture
+The Packages workflow creates development archives for Apple Silicon macOS,
+Intel macOS, and x86_64 Linux. The Linux build targets glibc 2.35 or newer; macOS
+packages target macOS 13 or newer. Archives include the binary, license, README,
+manual, bash/zsh/fish completions, and a SHA256 checksum. Download them from the
+workflow's artifacts. These are unsigned development builds.
 
-- `crates/foldr-core`: folder models, native platform adapters, capability
-  descriptions, change planning, presets, and recovery.
-- `crates/foldr-cli`: command parsing, terminal output, and structured output.
+Build a package on a native supported host:
 
-Keep platform-specific operations in core adapters and presentation in the CLI.
-The initial scaffold contains adapter modules; their implementation is scheduled
-in the backlog.
+```sh
+bash scripts/package.sh aarch64-apple-darwin
+```
 
-## Contributing
+Use the matching target for Intel macOS (`x86_64-apple-darwin`) or Linux
+(`x86_64-unknown-linux-gnu`). The package script executes the resulting binary, so
+cross-compiling it alone does not establish that it runs on the target system.
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). Project work is tracked with
-[Cairn](https://github.com/oddurs/cairn) as Markdown in this repository.
+## Project and contributing
 
-## License
+The [roadmap](ROADMAP.md) is generated from the repository's
+[Cairn items](cairn/items). The
+[concept and architecture](cairn/items/0005-record-cli-first-concept-and-rust-architecture.md)
+describe the product direction. Foldr is CLI first; a GUI, TUI, watcher service,
+and advanced filesystem integrations remain optional exploratory work.
 
-[MIT](LICENSE).
+See [CONTRIBUTING.md](CONTRIBUTING.md). Licensed under [MIT](LICENSE).

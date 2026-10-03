@@ -5,7 +5,12 @@ title: Verify editing, recovery, and first-use documentation
 type: chore
 status: planned
 milestone: v0.2
+assignee: integration-lead
 depends_on:
+- 11
+- 13
+- 14
+- 15
 - 16
 created: 2026-10-02
 updated: 2026-10-02

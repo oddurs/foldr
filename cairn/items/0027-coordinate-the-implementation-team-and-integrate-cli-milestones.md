@@ -1,0 +1,40 @@
+---
+id: 27
+uid: efd59519-3cca-4f99-9a3f-2b471e740453
+title: Coordinate the implementation team and integrate CLI milestones
+type: chore
+status: doing
+milestone: v0.3
+assignee: integration-lead
+created: 2026-10-02
+updated: 2026-10-02
+priority: p0
+area: integration
+---
+
+## Context
+
+The user explicitly requested a team organized by roles to implement foldr. Four concurrent roles are available: project lead/integration (root), core architect, platform engineer, and CLI engineer.
+
+## Proposal
+
+Implement the planned v0.1-v0.3 CLI milestones with shared API contracts and disjoint file ownership. Core architect owns model/engine/presets; platform engineer owns native adapters; CLI engineer owns command/rendering code; root owns integration checks, CI, packaging and contributor documentation. Agents must claim Cairn items, record evidence, preserve other agents changes, and avoid committing or pushing shared work. Publish a reviewable branch and pull request after checks. Optional GUI/TUI, watcher services, and advanced filesystem policies remain exploratory backlog work.
+
+## Acceptance criteria
+
+- [x] Role ownership and a shared core/platform/CLI API contract are recorded.
+- [ ] Planned CLI functionality is integrated and verified on macOS and Linux.
+- [ ] Cairn reflects verified outcomes and any concrete limitations.
+- [ ] A reviewable implementation branch and pull request are published with passing checks.
+
+## 2026-10-02
+
+Org/API agreement: root owns integration/verification, CI, packaging and root docs; core-architect owns typed model/inspect/change/preset/diff/batch engine and core manifest; platform-engineer owns platform/** native adapters; cli-engineer owns CLI grammar/rendering/commands and CLI integration tests. The core holds an open directory File and validates symlink/identity; native adapter exposes inspect_native(&File)->NativeInspection, read/write_xattr(&File, raw name, optional bytes), read/write_flags(&File,u64). JSON preserves arbitrary paths/values as byte arrays with escaped display. Native writes never parse shell utility output. Preparatory items permit independent API work; release validation remains separate.
+
+## 2026-10-02
+
+First complete local integration run: formatting/clippy,19 core tests,1 output unit test,9 CLI integration tests and scripts/verify-cli.py passed. The independent workflow covered read-only inspect/doctor, terminal-safe path bytes, notes/binary attributes, exact no-write dry-run, recovery and undo conflict refusal, explicit symlink follow, permissions, native hidden flags, partial presets/batches, generated shell/manual docs and clean broken pipes. Additional native tests are being added; Linux runtime remains a required CI gate.
+
+## 2026-10-02
+
+Native Apple Silicon package built, checksum verified, extracted contents reviewed, and packaged binary passed the independent end-to-end verifier. Packaging review removed ambient macOS AppleDouble metadata from archives and actionlint caught/fixed checksum glob quoting. Both workflows now pass actionlint; shell/Python verification scripts parse cleanly. Core audit is fixing unknown recovery schemas, malformed/duplicate plan preflight, and syncing newly created journal parents before publication.
