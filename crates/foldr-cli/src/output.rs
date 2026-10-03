@@ -186,14 +186,7 @@ pub fn inspect(snapshot: &foldr_core::FolderSnapshot, json_output: bool) -> Resu
             for attribute in value {
                 let value = match std::str::from_utf8(&attribute.value) {
                     Ok(text) => escaped(text),
-                    Err(_) => format!(
-                        "hex:{}",
-                        attribute
-                            .value
-                            .iter()
-                            .map(|byte| format!("{byte:02x}"))
-                            .collect::<String>()
-                    ),
+                    Err(_) => format!("hex:{}", hex_bytes(&attribute.value)),
                 };
                 writeln!(
                     writer,
@@ -254,13 +247,7 @@ fn render_value(
                         if let Some(bytes) = json_bytes(&fields["value"]) {
                             let value = match std::str::from_utf8(&bytes) {
                                 Ok(text) => format!("\"{}\"", escaped(text)),
-                                Err(_) => format!(
-                                    "hex:{}",
-                                    bytes
-                                        .iter()
-                                        .map(|byte| format!("{byte:02x}"))
-                                        .collect::<String>()
-                                ),
+                                Err(_) => format!("hex:{}", hex_bytes(&bytes)),
                             };
                             return writeln!(
                                 writer,
@@ -320,6 +307,15 @@ fn json_bytes(value: &Value) -> Option<Vec<u8>> {
         .iter()
         .map(|value| value.as_u64().and_then(|value| u8::try_from(value).ok()))
         .collect()
+}
+
+fn hex_bytes(bytes: &[u8]) -> String {
+    use std::fmt::Write as _;
+    let mut value = String::with_capacity(bytes.len() * 2);
+    for byte in bytes {
+        write!(&mut value, "{byte:02x}").expect("writing to a String cannot fail");
+    }
+    value
 }
 
 pub fn diagnostic(error: &CliError, json_output: bool) {

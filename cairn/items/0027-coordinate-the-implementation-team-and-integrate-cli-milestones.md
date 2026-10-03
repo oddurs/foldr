@@ -38,3 +38,11 @@ First complete local integration run: formatting/clippy,19 core tests,1 output u
 ## 2026-10-02
 
 Native Apple Silicon package built, checksum verified, extracted contents reviewed, and packaged binary passed the independent end-to-end verifier. Packaging review removed ambient macOS AppleDouble metadata from archives and actionlint caught/fixed checksum glob quoting. Both workflows now pass actionlint; shell/Python verification scripts parse cleanly. Core audit is fixing unknown recovery schemas, malformed/duplicate plan preflight, and syncing newly created journal parents before publication.
+
+## 2026-10-02
+
+Checkpoint ef2a449 published as draft PR https://github.com/oddurs/foldr/pull/1. Native stable CI passed macOS and Linux (run37092594760), and all3 native package jobs passed (run37092594808), including checksum, extractedbinary, man/completions, and independent end-to-end workflows. Rust1.85 Clippy found only two format_collect sites in corecompare; these are being fixed together with reviewer-reproduced execute-only parent directory traversal. No platform runtime failure occurred.
+
+## 2026-10-02
+
+Final source fixes are integrated: descriptor traversal now uses search-only ancestors while final folder descriptors remain readable; symlink ancestors still refuse. Core and CLI hexadecimal formatting now pass exact Rust1.85.0 denied-warning Clippy. Root aggregate stable/MSRV formatting, full workspace lint and47 macOS tests pass; stable build, standalone real-filesystem walkthrough and denied-warning rustdoc pass. Both workflows pass actionlint. Remote native CI/package rerun will verify this source revision before release gates close.

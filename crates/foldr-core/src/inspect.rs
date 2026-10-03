@@ -57,14 +57,15 @@ pub(crate) fn open_directory(path: &Path, follow: bool) -> Result<File, FoldrErr
         .map_err(|e| FoldrError::io("open directory", e))
 }
 fn open_without_symlinks(path: &Path) -> Result<File, FoldrError> {
-    let mut directory = OpenOptions::new()
-        .read(true)
-        .custom_flags(libc::O_DIRECTORY | libc::O_CLOEXEC)
-        .open(if path.is_absolute() {
-            Path::new("/")
-        } else {
-            Path::new(".")
-        })?;
+    #[cfg(target_os = "macos")]
+    let access = libc::O_SEARCH;
+    #[cfg(target_os = "linux")]
+    let access = libc::O_PATH;
+    #[cfg(not(any(target_os = "macos", target_os = "linux")))]
+    let access = libc::O_RDONLY;
+    let traversal_flags = access | libc::O_DIRECTORY | libc::O_CLOEXEC | libc::O_NOFOLLOW;
+    let base = if path.is_absolute() { c"/" } else { c"." };
+    let mut directory = open_at(libc::AT_FDCWD, base, traversal_flags)?;
     for component in path.components() {
         let name = match component {
             Component::RootDir | Component::CurDir => continue,
@@ -76,32 +77,40 @@ fn open_without_symlinks(path: &Path) -> Result<File, FoldrError> {
         };
         let name =
             CString::new(name).map_err(|_| FoldrError::InvalidInput("NUL byte in path".into()))?;
-        // SAFETY: the parent descriptor and NUL-terminated component remain valid
-        // throughout openat; returned descriptors are adopted once by File.
-        let descriptor = unsafe {
-            libc::openat(
-                directory.as_raw_fd(),
-                name.as_ptr(),
-                libc::O_RDONLY | libc::O_DIRECTORY | libc::O_CLOEXEC | libc::O_NOFOLLOW,
-            )
-        };
-        if descriptor < 0 {
-            let error = std::io::Error::last_os_error();
-            if matches!(
-                error.raw_os_error(),
-                Some(libc::ELOOP) | Some(libc::ENOTDIR)
-            ) {
-                return Err(FoldrError::InvalidInput("path contains a non-directory or symlink component; symlinks require --follow-symlink".into()));
-            }
-            return Err(FoldrError::io(
-                "open directory component (symlinks require --follow-symlink)",
-                error,
-            ));
-        }
-        // SAFETY: successful openat returned a new owned descriptor.
-        directory = unsafe { File::from_raw_fd(descriptor) };
+        directory = open_at(directory.as_raw_fd(), &name, traversal_flags)?;
     }
-    Ok(directory)
+    // Search-only descriptors avoid requiring list permission on ancestors.
+    // Reopen this already-held object for native reads and writes; no pathname
+    // components are resolved again, so ancestor replacement cannot redirect it.
+    open_at(
+        directory.as_raw_fd(),
+        c".",
+        libc::O_RDONLY | libc::O_DIRECTORY | libc::O_CLOEXEC | libc::O_NOFOLLOW,
+    )
+}
+fn open_at(
+    parent: libc::c_int,
+    name: &std::ffi::CStr,
+    flags: libc::c_int,
+) -> Result<File, FoldrError> {
+    // SAFETY: the parent descriptor and NUL-terminated name remain valid during
+    // openat. AT_FDCWD is a valid selector for the first directory in the walk.
+    let descriptor = unsafe { libc::openat(parent, name.as_ptr(), flags) };
+    if descriptor < 0 {
+        let error = std::io::Error::last_os_error();
+        if matches!(
+            error.raw_os_error(),
+            Some(libc::ELOOP) | Some(libc::ENOTDIR)
+        ) {
+            return Err(FoldrError::InvalidInput("path contains a non-directory or symlink component; symlinks require --follow-symlink".into()));
+        }
+        return Err(FoldrError::io(
+            "open directory component (symlinks require --follow-symlink)",
+            error,
+        ));
+    }
+    // SAFETY: successful openat returned a new descriptor owned by this File.
+    Ok(unsafe { File::from_raw_fd(descriptor) })
 }
 
 #[cfg(test)]
@@ -152,6 +161,58 @@ mod tests {
             Err(error)
                 if cfg!(target_os = "macos") && error.raw_os_error() == Some(libc::EILSEQ) => {}
             Err(error) => panic!("create non-UTF8 folder: {error}"),
+        }
+    }
+    #[test]
+    fn searchable_unlistable_parents_allow_edits_without_following_symlinks() {
+        use std::os::unix::fs::PermissionsExt;
+        struct RestorePermissions(File, u32);
+        impl Drop for RestorePermissions {
+            fn drop(&mut self) {
+                let _ = self.0.set_permissions(fs::Permissions::from_mode(self.1));
+            }
+        }
+        let temp = tempfile::tempdir().unwrap();
+        let root = fs::canonicalize(temp.path()).unwrap();
+        let parent = root.join("parent");
+        let target = parent.join("target");
+        fs::create_dir(&parent).unwrap();
+        fs::create_dir(&target).unwrap();
+        let parent_file = File::open(&parent).unwrap();
+        let mode = parent_file.metadata().unwrap().mode();
+        let restore = RestorePermissions(parent_file, mode);
+        let alias = root.join("parent-link");
+        symlink(&parent, &alias).unwrap();
+        restore
+            .0
+            .set_permissions(fs::Permissions::from_mode(0o111))
+            .unwrap();
+        assert!(open_directory(&target, false).is_ok());
+        let request = crate::ChangeRequest {
+            note: Some(Some("search-only parent".into())),
+            ..Default::default()
+        };
+        let record = crate::apply(
+            &crate::plan(&target, &request, false).unwrap(),
+            &root.join("state"),
+        )
+        .unwrap();
+        assert!(record.succeeded());
+        assert_eq!(
+            crate::read_note(&target).unwrap(),
+            Some(b"search-only parent".to_vec())
+        );
+        assert!(matches!(
+            open_directory(&alias.join("target"), false),
+            Err(FoldrError::InvalidInput(_))
+        ));
+        restore
+            .0
+            .set_permissions(fs::Permissions::from_mode(0o0))
+            .unwrap();
+        // SAFETY: geteuid takes no pointers and cannot violate memory safety.
+        if unsafe { libc::geteuid() } != 0 {
+            assert!(open_directory(&target, false).is_err());
         }
     }
 }

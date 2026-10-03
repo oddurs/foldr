@@ -84,14 +84,21 @@ that the directory identity and observed fields still match.
 
 Changes are verified and recorded before and after writes in a private recovery
 directory. A group of filesystem writes is not atomic: partial failure records
-which fields were applied. Undo restores recorded fields only when their current
-values match the recorded post-change values. It does not overwrite unrelated
-metadata or intervening edits.
+which fields were applied. Undo checks that current values match the recorded
+post-change values before restoring recorded fields. Unrelated metadata stays
+untouched. Native filesystem calls do not provide a transaction or compare-and-swap
+across metadata fields; another writer can race a check and write. Directory
+identities also have limits across inode reuse and mount changes.
 
 Basic permission editing requires owner read and search bits to remain enabled
 (`0500`), so recovery can reopen the directory. It refuses changes when an
 extended ACL needs review or the ACL cannot be read. Rich ACL editing is tracked
 as future work.
+
+On Linux, a directory's setgid bit gives newly created entries its group ownership.
+The sticky bit restricts unprivileged deletion and renaming to the entry's owner
+or the directory's owner. Neither bit rewrites existing or moved-in entries'
+ownership or modes.
 
 Support depends on the filesystem, mount options, and current user. macOS Finder
 hiding is a native flag; Linux dot-name hiding requires a rename and is not a

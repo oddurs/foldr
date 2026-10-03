@@ -20,6 +20,16 @@ pub struct Difference {
     pub left: ComparisonValue,
     pub right: ComparisonValue,
 }
+fn attribute_field(name: &[u8]) -> String {
+    const HEX: &[u8; 16] = b"0123456789abcdef";
+    let mut field = String::with_capacity(6 + name.len() * 2);
+    field.push_str("xattr:");
+    for byte in name {
+        field.push(char::from(HEX[usize::from(byte >> 4)]));
+        field.push(char::from(HEX[usize::from(byte & 0x0f)]));
+    }
+    field
+}
 fn property_value<T: Serialize>(property: &Property<T>) -> ComparisonValue {
     match property {
         Property::Supported { value } => ComparisonValue::Present {
@@ -102,14 +112,7 @@ fn values(snapshot: &FolderSnapshot) -> BTreeMap<String, ComparisonValue> {
         Property::Supported { value } => {
             for attr in value {
                 result.insert(
-                    format!(
-                        "xattr:{}",
-                        attr.name
-                            .bytes
-                            .iter()
-                            .map(|b| format!("{b:02x}"))
-                            .collect::<String>()
-                    ),
+                    attribute_field(&attr.name.bytes),
                     ComparisonValue::Present {
                         value: json!(attr.value),
                     },
@@ -209,10 +212,7 @@ pub fn compare_preset(
             "user.foldr."
         };
         let name = format!("{prefix}{key}").into_bytes();
-        let field = format!(
-            "xattr:{}",
-            name.iter().map(|b| format!("{b:02x}")).collect::<String>()
-        );
+        let field = attribute_field(&name);
         let observed = if snapshot.xattrs.value().is_some() {
             actual
                 .get(&field)
@@ -270,6 +270,7 @@ mod tests {
         right.identity.inode += 1;
         let differences = compare_snapshots(&left, &right);
         assert_eq!(differences.len(), 1);
+        assert_eq!(differences[0].field, "xattr:ff");
         assert_eq!(
             differences[0].left,
             ComparisonValue::Present {
