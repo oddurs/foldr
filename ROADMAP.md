@@ -44,7 +44,7 @@ Ship explicit, previewable single-folder edits with verification, conflict-aware
 
 ## v0.3 — v0.3 — Everyday CLI workflows
 
-`##########` 100% · 6 of 6 done
+`##########` 100% · 8 of 8 done
 
 Make comparisons, batch application, installation, and shell use convenient without requiring a background service.
 
@@ -56,6 +56,8 @@ Make comparisons, batch application, installation, and shell use convenient with
 - [x] [`0027`](https://github.com/oddurs/foldr/blob/main/cairn/items/0027-coordinate-the-implementation-team-and-integrate-cli-milestones.md) Coordinate the implementation team and integrate CLI milestones <sup>chore · p0</sup>
 - [x] [`0036`](https://github.com/oddurs/foldr/blob/main/cairn/items/0036-keep-hexadecimal-comparison-keys-compatible-with-rust-1-85-clippy.md) Keep hexadecimal comparison keys compatible with Rust 1.85 Clippy <sup>bug · p0</sup>
 - [x] [`0037`](https://github.com/oddurs/foldr/blob/main/cairn/items/0037-fix-cli-hex-formatting-lint-on-rust-1-85.md) Fix CLI hex formatting lint on Rust 1.85 <sup>bug · p0</sup>
+- [x] [`0038`](https://github.com/oddurs/foldr/blob/main/cairn/items/0038-merge-the-verified-cli-implementation-pull-request.md) Merge the verified CLI implementation pull request <sup>chore · p2</sup>
+- [x] [`0039`](https://github.com/oddurs/foldr/blob/main/cairn/items/0039-publish-the-first-public-cli-release.md) Publish the first public CLI release <sup>chore · p2</sup>
 
 ## later — Later — Optional interfaces and filesystem experiments
 
