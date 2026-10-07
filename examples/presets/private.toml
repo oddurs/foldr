@@ -1,0 +1,8 @@
+# Changes only this folder's basic mode to 0700 (owner read/write/search).
+# Existing child permissions, native flags, and metadata remain unchanged.
+# Extended ACLs are refused rather than silently changing their effective access.
+schema_version = 1
+name = "private"
+
+[settings]
+mode = 0o700

@@ -15,6 +15,13 @@ path = "src/main.rs"
 [dependencies]
 clap.workspace = true
 foldr-core.workspace = true
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+clap_complete = "4.6"
+clap_mangen = "0.2"
+
+[dev-dependencies]
+tempfile = "3"
 
 [lints]
 workspace = true
