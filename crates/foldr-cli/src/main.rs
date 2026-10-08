@@ -1,5 +1,6 @@
 mod args;
 mod compare;
+mod library;
 mod mutations;
 mod output;
 mod presets;
@@ -85,12 +86,18 @@ fn run(cli: &Cli) -> Result<(), CliError> {
         }
         Command::Note(command) => mutations::note(command, cli.state_dir.as_deref(), cli.json),
         Command::Attr(command) => mutations::attr(command, cli.state_dir.as_deref(), cli.json),
+        Command::Tags(command) => mutations::tags(command, cli.state_dir.as_deref(), cli.json),
         Command::Flags(command) => mutations::flags(command, cli.state_dir.as_deref(), cli.json),
         Command::Permissions(command) => {
             mutations::permissions(command, cli.state_dir.as_deref(), cli.json)
         }
         Command::Undo(command) => mutations::undo(command, cli.state_dir.as_deref(), cli.json),
-        Command::Preset(command) => presets::run(command, cli.state_dir.as_deref(), cli.json),
+        Command::Preset(command) => presets::run(
+            command,
+            cli.state_dir.as_deref(),
+            cli.preset_dir.as_deref(),
+            cli.json,
+        ),
         Command::Diff {
             left,
             right,

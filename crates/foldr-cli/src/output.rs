@@ -319,7 +319,7 @@ fn hex_bytes(bytes: &[u8]) -> String {
 }
 
 pub fn diagnostic(error: &CliError, json_output: bool) {
-    if error.code == 0 {
+    if matches!(error.code, 0 | 6) {
         return;
     }
     let stderr = io::stderr();

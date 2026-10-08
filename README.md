@@ -5,7 +5,8 @@ A Rust CLI for inspecting and configuring folders on macOS and Linux.
 See the properties behind a folder's name: permissions, extended attributes,
 native flags, ACL summaries, and filesystem capabilities. Edit notes, binary
 metadata, supported flags, and basic permissions; save partial presets; preview
-changes; and recover recorded edits.
+changes; and recover recorded edits. Reuse named profiles, check for drift in
+scripts, explain directory access rules, and manage native Finder tags on macOS.
 
 ## Try it
 
@@ -40,6 +41,24 @@ foldr preset show inbox.toml
 foldr preset apply inbox.toml /absolute/path/to/another-folder --dry-run
 ```
 
+Install a preset into your user library and reuse it by name:
+
+```sh
+foldr preset install inbox.toml --name inbox
+foldr preset list
+foldr preset apply --name inbox "$foldr_demo_dir" --dry-run
+foldr preset check --name inbox "$foldr_demo_dir"
+foldr permissions explain "$foldr_demo_dir"
+foldr undo history --path "$foldr_demo_dir" --limit 10
+```
+
+A compliance check returns `0` when requested settings match and `6` when they
+drift. It changes neither folder metadata nor recovery state. Unknown,
+unsupported, or inaccessible settings produce errors and cannot count as a
+match. With `--name`, all positional operands are target folders; otherwise the
+first operand selects a preset file. Named presets are applied only by an explicit
+command.
+
 Review recorded edits before undoing one:
 
 ```sh
@@ -59,8 +78,13 @@ foldr undo apply CHANGE_ID
 | `attr get/set/remove PATH KEY` | Read and edit metadata in foldr's namespace; `set --hex` accepts binary values |
 | `flags set PATH` | Set native flags using `--hidden true/false` or `--immutable true/false` |
 | `permissions set PATH OCTAL` | Change the selected directory's mode |
+| `permissions explain PATH` | Explain mode bits, native ACLs, and inheritance without writing |
 | `preset save/show/apply/import/export` | Work with versioned, human-editable TOML presets |
+| `preset install FILE --name NAME` / `preset list` | Install and list an explicit user preset library |
+| `preset check FILE PATH...` / `preset check --name NAME PATH...` | Report compliance, drift, or indeterminate properties |
 | `undo history/show/apply` | Inspect recovery records and restore recorded fields |
+| `undo history --path PATH --limit N` | Find a folder's records and summarize their status |
+| `tags list/add/remove PATH` | Read and edit Finder tag names on macOS |
 | `diff LEFT RIGHT` | Compare folders, JSON snapshots (`--snapshot`), or a folder and preset (`--preset`) |
 | `completions SHELL` | Generate shell completions |
 | `man` | Generate the manual page |
@@ -72,9 +96,11 @@ project, archive, and private settings.
 
 ## Scope and recovery
 
-Presets are patches: omitted settings stay untouched. Foldr writes only its own
-attributes (`com.foldr.*` on macOS, `user.foldr.*` on Linux), preserves unrelated
-native flags, and does not change existing child permissions. A directory's
+Presets are patches: omitted settings stay untouched. Note and attribute commands
+write only foldr's attributes (`com.foldr.*` on macOS, `user.foldr.*` on Linux).
+Native Finder tags use a separate, explicitly authorized field with the same
+preview and recovery engine. Foldr preserves unrelated metadata and native flags,
+and does not change existing child permissions. A directory's
 immutable flag protects its entries; existing files can remain editable.
 
 Inspection follows directory symlinks and reports a target when the final path is
@@ -100,12 +126,34 @@ The sticky bit restricts unprivileged deletion and renaming to the entry's owner
 or the directory's owner. Neither bit rewrites existing or moved-in entries'
 ownership or modes.
 
+`permissions explain` describes the observed access rules and inheritance. Linux
+default ACLs affect newly created entries; macOS has separate allow/deny and
+inheritance semantics. The explanation states remaining uncertainty about
+effective access rather than guessing results for other identities or security
+policies.
+
 Support depends on the filesystem, mount options, and current user. macOS Finder
 hiding is a native flag; Linux dot-name hiding requires a rename and is not a
 flag toggle. Linux immutable writes can require additional privileges. Inspection
 never tests write support by modifying a folder, so some write capabilities are
 reported as unknown until an edit is attempted. Unsupported operations explain
 their limitation; foldr does not automatically elevate privileges.
+
+On macOS, add or remove a Finder tag from the terminal:
+
+```sh
+foldr tags list "$foldr_demo_dir"
+foldr tags add "$foldr_demo_dir" Inbox --dry-run
+foldr tags add "$foldr_demo_dir" Inbox
+foldr tags remove "$foldr_demo_dir" Inbox --dry-run
+```
+
+Tag edits preserve existing colors, tag order and unrelated Finder metadata.
+Malformed tags, unrecognized color encodings, and ambiguous legacy-only Finder
+labels require review. Clearing the last tag while a legacy Finder label remains
+is refused. Linux reports native Finder tags as unsupported. Existing preset and
+recovery formats remain readable; native Finder fields use an explicit newer
+schema so older clients refuse them instead of silently dropping them.
 
 ## Output and state
 
@@ -124,11 +172,22 @@ documents; completions and man reject `--json`.
 Exit codes: `0` success, `1` operational failure, `2` invalid input, `3` unsupported
 operation, `4` conflict, `5` partial operation or failed batch target. Batch output
 includes per-target results; other targets can succeed when one target fails.
+Preset checks additionally use `6` for definite drift. Their aggregate errors
+take precedence over drift: operational `1`, conflict `4`, unsupported `3`, then
+invalid-target `2`. A pure drift result goes to stdout without a diagnostic.
 
 Recovery state defaults to `~/Library/Application Support/foldr/history` on macOS
 and `$XDG_STATE_HOME/foldr` or `~/.local/state/foldr` on Linux. Override it with
 `--state-dir PATH` or `FOLDR_STATE_DIR`. Keep state outside the folder being edited.
 An existing state directory must be private and owned by the current user.
+
+Preset libraries default to `~/Library/Application Support/foldr/presets` on
+macOS and `$XDG_CONFIG_HOME/foldr/presets` or `~/.config/foldr/presets` on Linux.
+Override this with `--preset-dir PATH`. Library paths refuse symlink components;
+use canonical paths for macOS `/tmp` and `/var` aliases. Installing an existing
+name refuses to overwrite it. Listing an absent library creates nothing.
+Folder-filtered history uses directory identity and summarizes complete, partial
+or interrupted records; apply an explicitly selected change ID to recover it.
 
 Folder metadata may be lost in Git, archives, cross-filesystem copies, or sync
 tools. Preset import/export is explicit; it uses TOML and preserves binary values.
@@ -145,6 +204,7 @@ cargo clippy --workspace --all-targets --locked -- -D warnings
 cargo test --workspace --locked
 cargo build --workspace --locked
 python3 scripts/verify-cli.py target/debug/foldr
+python3 scripts/verify-v020.py target/debug/foldr
 ```
 
 The Packages workflow creates development archives for Apple Silicon macOS,

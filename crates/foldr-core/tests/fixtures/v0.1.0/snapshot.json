@@ -1,0 +1,268 @@
+{
+  "command": "inspect",
+  "data": {
+    "acl": {
+      "state": "supported",
+      "value": {
+        "entries": [],
+        "has_extended_entries": false
+      }
+    },
+    "capabilities": [
+      {
+        "description": "Binary folder metadata; copies, archives, sync tools and Git may not preserve it.",
+        "name": "xattrs",
+        "read": {
+          "state": "supported"
+        },
+        "scope": "folder",
+        "write": {
+          "reason": "inspection is read-only; write permission and filesystem policy are checked when applying a change",
+          "state": "unknown"
+        }
+      },
+      {
+        "description": "Finder hiding changes visibility without renaming the folder or blocking known-path access.",
+        "name": "hidden",
+        "read": {
+          "state": "supported"
+        },
+        "scope": "folder",
+        "write": {
+          "reason": "inspection is read-only; write permission and filesystem policy are checked when applying a change",
+          "state": "unknown"
+        }
+      },
+      {
+        "description": "Directory locking protects entries; it does not freeze the contents of existing child files.",
+        "name": "immutable",
+        "read": {
+          "state": "supported"
+        },
+        "scope": "folder",
+        "write": {
+          "reason": "inspection is read-only; write permission and filesystem policy are checked when applying a change",
+          "state": "unknown"
+        }
+      },
+      {
+        "description": "Native extended ACL entries can grant or deny access and specify inheritance; this summary does not resolve effective permissions.",
+        "name": "acl",
+        "read": {
+          "state": "supported"
+        },
+        "scope": "folder",
+        "write": {
+          "reason": "foldr currently inspects ACLs; native ACL editing is outside this release",
+          "state": "unsupported"
+        }
+      },
+      {
+        "description": "Finder tag metadata is retained as its original binary plist in xattrs. Metadata absent.",
+        "name": "finder_tags",
+        "read": {
+          "state": "supported"
+        },
+        "scope": "folder",
+        "write": {
+          "reason": "appearance editing is outside this CLI release",
+          "state": "unsupported"
+        }
+      },
+      {
+        "description": "FinderInfo carries the custom icon marker; the icon artwork may live separately in an Icon resource file. Metadata absent.",
+        "name": "custom_icon",
+        "read": {
+          "state": "supported"
+        },
+        "scope": "folder",
+        "write": {
+          "reason": "appearance editing is outside this CLI release",
+          "state": "unsupported"
+        }
+      }
+    ],
+    "filesystem": {
+      "state": "supported",
+      "value": {
+        "name": "apfs",
+        "read_only": false,
+        "type_id": 26
+      }
+    },
+    "flags": {
+      "state": "supported",
+      "value": {
+        "names": [],
+        "raw": 0
+      }
+    },
+    "group": 0,
+    "identity": {
+      "device": 16777231,
+      "inode": 163912353
+    },
+    "mode": 493,
+    "owner": 501,
+    "path": {
+      "bytes": [
+        47,
+        112,
+        114,
+        105,
+        118,
+        97,
+        116,
+        101,
+        47,
+        116,
+        109,
+        112,
+        47,
+        102,
+        111,
+        108,
+        100,
+        114,
+        45,
+        118,
+        48,
+        49,
+        48,
+        45,
+        99,
+        97,
+        112,
+        116,
+        117,
+        114,
+        101,
+        45,
+        121,
+        103,
+        116,
+        52,
+        49,
+        106,
+        57,
+        100,
+        47,
+        102,
+        111,
+        108,
+        100,
+        101,
+        114
+      ],
+      "display": "/private/tmp/foldr-v010-capture-ygt41j9d/folder"
+    },
+    "platform": "macos",
+    "schema_version": 1,
+    "symlink_target": null,
+    "xattrs": {
+      "state": "supported",
+      "value": [
+        {
+          "name": {
+            "bytes": [
+              99,
+              111,
+              109,
+              46,
+              97,
+              112,
+              112,
+              108,
+              101,
+              46,
+              112,
+              114,
+              111,
+              118,
+              101,
+              110,
+              97,
+              110,
+              99,
+              101
+            ],
+            "display": "com.apple.provenance"
+          },
+          "value": [
+            1,
+            2,
+            0,
+            243,
+            71,
+            94,
+            201,
+            117,
+            46,
+            204,
+            246
+          ]
+        },
+        {
+          "name": {
+            "bytes": [
+              99,
+              111,
+              109,
+              46,
+              102,
+              111,
+              108,
+              100,
+              114,
+              46,
+              98,
+              105,
+              110,
+              97,
+              114,
+              121
+            ],
+            "display": "com.foldr.binary"
+          },
+          "value": [
+            0,
+            255,
+            10
+          ]
+        },
+        {
+          "name": {
+            "bytes": [
+              99,
+              111,
+              109,
+              46,
+              102,
+              111,
+              108,
+              100,
+              114,
+              46,
+              110,
+              111,
+              116,
+              101
+            ],
+            "display": "com.foldr.note"
+          },
+          "value": [
+            111,
+            108,
+            100,
+            32,
+            110,
+            111,
+            116,
+            101
+          ]
+        }
+      ]
+    }
+  },
+  "schema_version": 1
+}

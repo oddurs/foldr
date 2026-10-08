@@ -159,7 +159,15 @@ mod tests {
         match fs::create_dir(&folder) {
             Ok(()) => assert!(open_directory(&folder, false).is_ok()),
             Err(error)
-                if cfg!(target_os = "macos") && error.raw_os_error() == Some(libc::EILSEQ) => {}
+                if cfg!(target_os = "macos")
+                    && matches!(error.raw_os_error(), Some(libc::EILSEQ) | Some(libc::EPERM)) =>
+            {
+                let valid = folder.with_file_name("valid-neighbor");
+                fs::create_dir(&valid).expect("valid neighboring directory must be writable");
+                eprintln!(
+                    "skipping invalid-UTF8 native directory fixture: macOS filesystem or managed sandbox refuses byte path ({error}); valid neighboring directory succeeds"
+                );
+            }
             Err(error) => panic!("create non-UTF8 folder: {error}"),
         }
     }
