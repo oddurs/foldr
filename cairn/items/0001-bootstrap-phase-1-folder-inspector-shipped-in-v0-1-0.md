@@ -2,12 +2,12 @@
 id: 1
 uid: 2e50acf1-ea16-44f9-8974-326af1e7c4c2
 key: v0.1
-title: v0.1 — Folder inspector
+title: Bootstrap phase 1 — Folder inspector (shipped in v0.1.0)
 type: milestone
 status: done
 assignee: integration-lead
 created: 2026-10-02
-updated: 2026-10-02
+updated: 2026-10-07
 closed_at: 2026-10-02
 priority: p0
 ---
@@ -21,3 +21,7 @@ All scheduled inspector child items and native stable/MSRV verification are comp
 ## Result
 
 Folder inspector milestone implemented and verified on macOS/Linux: native properties, byte-safe structured output, readable inspection and truthful capability explanations. All scheduled child items are done.
+
+## 2026-10-07
+
+Historical bootstrap milestone: this phase shipped in public v0.1.0. Its original key is preserved for reference integrity; actual next release planning is0041 with key release-0.2.0.

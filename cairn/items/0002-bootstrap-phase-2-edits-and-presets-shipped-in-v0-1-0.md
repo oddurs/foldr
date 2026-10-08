@@ -2,12 +2,12 @@
 id: 2
 uid: 1baeb07b-2065-4149-9e05-fa89dca3b2a1
 key: v0.2
-title: v0.2 — Edit folders and apply presets
+title: Bootstrap phase 2 — Edits and presets (shipped in v0.1.0)
 type: milestone
 status: done
 assignee: integration-lead
 created: 2026-10-02
-updated: 2026-10-02
+updated: 2026-10-07
 closed_at: 2026-10-02
 priority: p1
 effort: l
@@ -27,3 +27,7 @@ All scheduled change-engine, notes, native flags, basic permissions, presets and
 ## Result
 
 Edit/preset milestone implemented and verified: dry-run, explicit native changes, durable recovery/conflict checks and versioned partial presets. All scheduled children and release gates are done.
+
+## 2026-10-07
+
+Historical bootstrap milestone: this phase shipped in public v0.1.0. Its original key is preserved for reference integrity; actual next release planning is0041 with key release-0.2.0.

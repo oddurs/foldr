@@ -8,7 +8,7 @@ milestone: later
 depends_on:
 - 17
 created: 2026-10-02
-updated: 2026-10-02
+updated: 2026-10-07
 priority: p2
 effort: m
 area: macos
@@ -27,3 +27,7 @@ Use native APIs to edit tags/custom icons while preserving unrelated Finder meta
 - [ ] Appearance changes have verified preservation and recovery behavior.
 - [ ] Terminal-only use remains fully supported.
 - [ ] Finder/package experiments clearly document their platform-specific effects.
+
+## 2026-10-07
+
+v0.2.0 items0047/0048 isolate Finder tag feasibility and gated edits. Custom icons and broader Finder appearance remain here in later backlog.
