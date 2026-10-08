@@ -4,10 +4,11 @@ uid: 4f7102df-75ed-47fa-85d8-0bfda9bf6f90
 key: release-0.2.0
 title: v0.2.0 — Reusable folder profiles and clearer native behavior
 type: milestone
-status: planned
+status: done
 assignee: integration-lead
 created: 2026-10-07
 updated: 2026-10-07
+closed_at: 2026-10-07
 priority: p0
 effort: l
 area: release
@@ -60,6 +61,14 @@ Rich ACL writes, custom icons, arbitrary native-attribute edits, ownership chang
 
 ## Acceptance criteria
 
-- [ ] Named presets, read-only compliance checks, permission explanations and filtered recovery history meet their child acceptance criteria on supported platforms.
-- [ ] Finder tags have a recorded native go/no-go decision; they either pass preservation/recovery gates or are explicitly deferred with milestone/dependencies updated.
-- [ ] Existing v0.1.0 CLI/data behavior remains covered and all mandatory children plus the native release gate are complete.
+- [x] Named presets, read-only compliance checks, permission explanations and filtered recovery history meet their child acceptance criteria on supported platforms.
+- [x] Finder tags have a recorded native go/no-go decision; they either pass preservation/recovery gates or are explicitly deferred with milestone/dependencies updated.
+- [x] Existing v0.1.0 CLI/data behavior remains covered and all mandatory children plus the native release gate are complete.
+
+## 2026-10-07
+
+All 12 release-0.2.0 children are complete. Finder decision 0047 was GO and 0048 passed native preservation/recovery gates. Named presets, stdout-only read-only drift checks, permission explanations and identity-filtered recovery history are shipped. Public v0.2.0 at https://github.com/oddurs/foldr/releases/tag/v0.2.0 resolves to verified merge 92955690e05edb721b33d414909097a85fcc2908 with Linux/Intel Mac/ARM Mac archives and verified uploaded SHA256 digests; CI 37715685128 and Packages 37715685115 passed all seven native jobs. Compatibility fixtures came from actual v0.1.0.
+
+## Result
+
+Shipped v0.2.0: reusable named presets, read-only compliance checks with drift exit 6, native permission explanations, filtered recovery history, and macOS Finder tag editing with exact recovery. All 12 release children completed. Native Ubuntu/macOS stable/MSRV and Linux/Intel Mac/ARM Mac package gates passed; 80 tests per local toolchain, genuine v0.1 compatibility fixtures and independent filesystem workflows passed. The public tag resolves to merge 92955690e05edb721b33d414909097a85fcc2908; all six release assets match verified digests. Optional interfaces and advanced filesystem features remain later backlog.

@@ -43,3 +43,7 @@ Read-only explicit-folder compliance implemented with shared selected-field sema
 ## 2026-10-07
 
 Final full CLI2unit+24integration suite and Clippy --all-targets -D warnings passed macOS exactRust1.85.0 and stable. CLI source frozen for root aggregate/nativeCI release validation; no Linux runtime pass claimed.
+
+## 2026-10-07
+
+Final native release gate passed on Ubuntu and macOS, stable and Rust 1.85; independent checks proved stdout-only exit 6, error precedence and unchanged target/state metadata (CI 37715685128 and Packages 37715685115).

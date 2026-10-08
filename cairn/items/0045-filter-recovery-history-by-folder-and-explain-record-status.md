@@ -40,3 +40,7 @@ Evidence: core tests history_query_matches_identity_and_never_rewrites_state and
 ## Result
 
 Read-only identity-filtered recovery history with deterministic newest-first queries, durable status summaries, private human output and lossless legacy JSON; core/CLI native macOS Rust1.85 tests pass.
+
+## 2026-10-07
+
+Filtered history and actual v0.1 recovery fixtures passed native Ubuntu/macOS stable/MSRV and extracted archive walkthroughs (CI 37715685128 and Packages 37715685115).

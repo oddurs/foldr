@@ -3,12 +3,12 @@ id: 50
 uid: 32d00a4b-1448-4806-b89b-aa39edf76f9f
 title: Integrate and verify the v0.2.0 implementation team
 type: chore
-status: doing
+status: done
 milestone: release-0.2.0
 assignee: integration-lead
-claimed: 2026-10-07
 created: 2026-10-07
 updated: 2026-10-07
+closed_at: 2026-10-07
 priority: p0
 area: integration
 part_of:
@@ -22,8 +22,8 @@ Coordinate implementation of planned v0.2.0 using the user-authorized project te
 ## Acceptance criteria
 
 - [x] Shared contracts and file ownership are followed and implementation meets the planned release scope.
-- [ ] Independent v0.1/v0.2 real-filesystem checks and native stable/MSRV/package jobs pass.
-- [ ] Verified implementation is merged, release artifacts are published and Cairn records the actual outcomes.
+- [x] Independent v0.1/v0.2 real-filesystem checks and native stable/MSRV/package jobs pass.
+- [x] Verified implementation is merged, release artifacts are published and Cairn records the actual outcomes.
 
 ## 2026-10-07
 
@@ -36,3 +36,11 @@ Independent v0.2 verifier is prepared: named preset install/list security, file-
 ## 2026-10-07
 
 Local integration is complete and frozen: named library, drift checks, identity-filtered history, native permission explanations and GO Finder tags all pass independent real-filesystem workflow on macOS. Original v0.1 workflow and real old-version data fixtures pass. Native setters preserve raw colors/FinderInfo and use typed schema2 journaling, while unchanged schemas remain1. Preparing reviewable candidate with80 passed tests per local toolchain; Linux native/runtime package proof is pending.
+
+## 2026-10-07
+
+All seven native CI and packaging checks passed on the exact candidate f66d6c0: stable and Rust 1.85 on Ubuntu/macOS, and extracted Linux/Intel Mac/ARM Mac archives with checksums, version and both real-filesystem walkthroughs.
+
+## Result
+
+The core, platform and CLI team delivered the complete v0.2.0 scope, including the Finder GO implementation. Integration passed 80 tests per stable/MSRV local toolchain, all seven native CI/package jobs and independent v0.1/v0.2 filesystem checks. PR #3 merged and the matching tag plus verified Linux/Intel Mac/ARM Mac artifacts are publicly published. Cairn reflects actual completion.

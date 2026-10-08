@@ -42,3 +42,7 @@ Explicit named TOML library implemented with pinned no-follow components, exclus
 ## 2026-10-07
 
 Final full CLI2unit+24integration suite and Clippy --all-targets -D warnings passed macOS exactRust1.85.0 and stable; no implicit env/current-folder lookup and installed-name overrides are documented by generated command help.
+
+## 2026-10-07
+
+Final native release gate passed on Ubuntu and macOS, stable and Rust 1.85, including library path and refusal checks (CI 37715685128 and Packages 37715685115).
