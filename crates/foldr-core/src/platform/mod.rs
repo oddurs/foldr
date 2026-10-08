@@ -5,7 +5,9 @@ use std::{fs::File, io};
 pub mod linux;
 #[cfg(target_os = "macos")]
 pub mod macos;
+pub mod permissions;
 mod raw;
+pub mod tags;
 #[cfg(target_os = "linux")]
 use linux as native;
 #[cfg(target_os = "macos")]

@@ -1,6 +1,7 @@
 use crate::{
     args::{
-        AttrCommand, FlagsCommand, MutationOptions, NoteCommand, PermissionsCommand, UndoCommand,
+        AttrCommand, FlagsCommand, MutationOptions, NoteCommand, PermissionsCommand, TagsCommand,
+        UndoCommand,
     },
     output::{CliError, emit},
 };
@@ -40,10 +41,20 @@ pub fn apply_request(
     command: &str,
 ) -> Result<(), CliError> {
     let plan = foldr_core::plan(path, request, options.follow_symlink)?;
-    if options.dry_run {
+    apply_plan(&plan, options.dry_run, state, json, command)
+}
+
+fn apply_plan(
+    plan: &foldr_core::ChangePlan,
+    dry_run: bool,
+    state: Option<&Path>,
+    json: bool,
+    command: &str,
+) -> Result<(), CliError> {
+    if dry_run {
         return emit(command, &plan, json);
     }
-    let record = foldr_core::apply(&plan, &state_directory(state)?)?;
+    let record = foldr_core::apply(plan, &state_directory(state)?)?;
     emit(command, &record, json)?;
     if !record.succeeded() {
         return Err(CliError {
@@ -55,6 +66,57 @@ pub fn apply_request(
         });
     }
     Ok(())
+}
+
+pub fn tags(command: &TagsCommand, state: Option<&Path>, json: bool) -> Result<(), CliError> {
+    match command {
+        TagsCommand::List { path } => {
+            let snapshot = foldr_core::inspect(path)?;
+            let tags = foldr_core::finder_tags_from_snapshot(&snapshot);
+            let code = match &tags {
+                foldr_core::Property::Supported { .. } => 0,
+                foldr_core::Property::Unsupported { .. } => 3,
+                _ => 1,
+            };
+            emit(
+                "tags.list",
+                &serde_json::json!({"path":snapshot.path,"tags":tags}),
+                json,
+            )?;
+            if code != 0 {
+                return Err(CliError {
+                    code,
+                    message: tags.reason().unwrap_or("Finder tags unavailable").into(),
+                });
+            }
+            Ok(())
+        }
+        TagsCommand::Add {
+            path,
+            names,
+            options,
+        }
+        | TagsCommand::Remove {
+            path,
+            names,
+            options,
+        } => {
+            let adding = matches!(command, TagsCommand::Add { .. });
+            let plan = foldr_core::finder_tag_plan(
+                path,
+                if adding { names } else { &[] },
+                if adding { &[] } else { names },
+                options.follow_symlink,
+            )?;
+            apply_plan(
+                &plan,
+                options.dry_run,
+                state,
+                json,
+                if adding { "tags.add" } else { "tags.remove" },
+            )
+        }
+    }
 }
 
 fn get(path: &Path, key: &str, json: bool, command: &str) -> Result<(), CliError> {
@@ -179,11 +241,21 @@ pub fn permissions(
     state: Option<&Path>,
     json: bool,
 ) -> Result<(), CliError> {
+    if let PermissionsCommand::Explain { path } = command {
+        return emit(
+            "permissions.explain",
+            &foldr_core::platform::permissions::explain(path)?,
+            json,
+        );
+    }
     let PermissionsCommand::Set {
         path,
         mode,
         options,
-    } = command;
+    } = command
+    else {
+        unreachable!("explain handled above");
+    };
     if mode.is_empty() || mode.len() > 4 || !mode.bytes().all(|byte| (b'0'..=b'7').contains(&byte))
     {
         return Err(CliError::usage(
@@ -207,7 +279,42 @@ pub fn permissions(
 pub fn undo(command: &UndoCommand, state: Option<&Path>, json: bool) -> Result<(), CliError> {
     let state = state_directory(state)?;
     match command {
-        UndoCommand::History => emit("undo.history", &foldr_core::history(&state)?, json),
+        UndoCommand::History { path, limit } => {
+            if path.is_none() && limit.is_none() {
+                let records = foldr_core::history(&state)?;
+                if json {
+                    return emit("undo.history", &records, true);
+                }
+                return emit(
+                    "undo.history",
+                    &records
+                        .iter()
+                        .map(|record| history_summary(record, None, false))
+                        .collect::<Vec<_>>(),
+                    false,
+                );
+            }
+            let entries = foldr_core::history_query(
+                &state,
+                &foldr_core::HistoryQuery {
+                    path: path.clone(),
+                    limit: limit.map(std::num::NonZeroUsize::get),
+                },
+            )?;
+            if json {
+                return emit("undo.history", &entries, true);
+            }
+            emit(
+                "undo.history",
+                &entries
+                    .iter()
+                    .map(|entry| {
+                        history_summary(&entry.record, entry.matched_path.as_ref(), entry.renamed)
+                    })
+                    .collect::<Vec<_>>(),
+                false,
+            )
+        }
         UndoCommand::Show { id } => emit("undo.show", &foldr_core::load_record(&state, id)?, json),
         UndoCommand::Apply { id, dry_run } => {
             let record = foldr_core::load_record(&state, id)?;
@@ -228,4 +335,16 @@ pub fn undo(command: &UndoCommand, state: Option<&Path>, json: bool) -> Result<(
             Ok(())
         }
     }
+}
+
+fn history_summary(
+    record: &foldr_core::ChangeRecord,
+    matched_path: Option<&EncodedPath>,
+    renamed: bool,
+) -> serde_json::Value {
+    serde_json::json!({
+        "id":record.id,"status":record.status(),"recorded_path":record.path,"matched_path":matched_path,
+        "renamed":renamed,"field_count":record.fields.len(),"undo_of":record.undo_of,
+        "show":format!("foldr undo show {}",record.id),"apply":format!("foldr undo apply {}",record.id)
+    })
 }

@@ -38,6 +38,8 @@ pub struct ChangeRequest {
     pub mode: Option<u32>,
     pub hidden: Option<bool>,
     pub immutable: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub finder_tags: Option<Vec<String>>,
 }
 fn deserialize_note_patch<'de, D: serde::Deserializer<'de>>(
     deserializer: D,
@@ -48,6 +50,7 @@ fn deserialize_note_patch<'de, D: serde::Deserializer<'de>>(
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum Field {
     Xattr { name: Vec<u8> },
+    FinderTags,
     Mode,
     Flags,
 }
@@ -140,7 +143,14 @@ pub fn plan(
     follow_symlinks: bool,
 ) -> Result<ChangePlan, FoldrError> {
     let file = open_directory(path.as_ref(), follow_symlinks)?;
-    let canonical = fs::canonicalize(path.as_ref())?;
+    plan_with_directory(path.as_ref(), request, &file)
+}
+fn plan_with_directory(
+    path: &Path,
+    request: &ChangeRequest,
+    file: &File,
+) -> Result<ChangePlan, FoldrError> {
+    let canonical = fs::canonicalize(path)?;
     // The canonical name must still identify the opened object.
     let id = identity(&file.metadata()?);
     if identity(&fs::metadata(&canonical)?) != id {
@@ -159,7 +169,16 @@ pub fn plan(
         let field = Field::Xattr {
             name: metadata_name(&key)?,
         };
-        push_change(&file, &mut changes, field, FieldValue::Bytes { value })?;
+        push_change(file, &mut changes, field, FieldValue::Bytes { value })?;
+    }
+    if let Some(names) = &request.finder_tags {
+        let value = platform::tags::update_finder_tags(file, names)?;
+        push_change(
+            file,
+            &mut changes,
+            Field::FinderTags,
+            FieldValue::Bytes { value },
+        )?;
     }
     if let Some(mode) = request.mode {
         if mode > 0o7777 {
@@ -173,7 +192,7 @@ pub fn plan(
                     .into(),
             ));
         }
-        let acl = platform::inspect_native(&file).acl;
+        let acl = platform::inspect_native(file).acl;
         if acl.value().is_none() || acl.value().is_some_and(|a| a.has_extended_entries) {
             return Err(FoldrError::Unsupported(
                 "permission changes require a readable ACL without extended entries; inspect and review the ACL first"
@@ -182,7 +201,7 @@ pub fn plan(
         }
         warnings.push("Directory read lists names; execute traverses names; write changes entries. Existing child modes remain unchanged.".into());
         push_change(
-            &file,
+            file,
             &mut changes,
             Field::Mode,
             FieldValue::Mode { value: mode },
@@ -194,7 +213,7 @@ pub fn plan(
                 "hidden flags are available only on macOS; Linux dot names require renaming".into(),
             ));
         }
-        let raw = platform::read_flags(&file)?;
+        let raw = platform::read_flags(file)?;
         let mut value = raw;
         if let Some(hidden) = request.hidden {
             if !cfg!(target_os = "macos") {
@@ -228,7 +247,7 @@ pub fn plan(
             );
         } else {
             push_change(
-                &file,
+                file,
                 &mut changes,
                 Field::Flags,
                 FieldValue::Flags { value },
@@ -236,13 +255,61 @@ pub fn plan(
         }
     }
     Ok(ChangePlan {
-        schema_version: 1,
+        schema_version: if request.finder_tags.is_some() { 2 } else { 1 },
         path: EncodedPath::new(canonical),
         identity: id,
         changes,
         warnings,
     })
 }
+/// Incremental tag edits derive membership using the same descriptor as planning.
+pub fn finder_tag_plan(
+    path: impl AsRef<Path>,
+    add: &[String],
+    remove: &[String],
+    follow_symlinks: bool,
+) -> Result<ChangePlan, FoldrError> {
+    let file = open_directory(path.as_ref(), follow_symlinks)?;
+    let before = platform::tags::read_finder_tags_raw(&file)?;
+    platform::tags::validate_finder_tags_write(&file, before.as_deref())?;
+    crate::presets::validate_tag_names(add)?;
+    crate::presets::validate_tag_names(remove)?;
+    if add.iter().any(|name| remove.contains(name)) {
+        return Err(FoldrError::InvalidInput(
+            "cannot add and remove the same Finder tag".into(),
+        ));
+    }
+    let mut names = platform::tags::decode_finder_tags(before.as_deref())?
+        .into_iter()
+        .map(|tag| tag.name)
+        .filter(|name| !remove.contains(name))
+        .collect::<Vec<_>>();
+    for name in add {
+        if !names.contains(name) {
+            names.push(name.clone());
+        }
+    }
+    let request = ChangeRequest {
+        finder_tags: Some(names),
+        ..Default::default()
+    };
+    let proposed = plan_with_directory(path.as_ref(), &request, &file)?;
+    let observed = proposed
+        .changes
+        .iter()
+        .find(|c| c.field == Field::FinderTags)
+        .map(|c| c.before.clone())
+        .unwrap_or(FieldValue::Bytes {
+            value: platform::tags::read_finder_tags_raw(&file)?,
+        });
+    if observed != (FieldValue::Bytes { value: before }) {
+        return Err(FoldrError::Conflict(
+            "Finder tags changed while planning incremental edit".into(),
+        ));
+    }
+    Ok(proposed)
+}
+
 fn set_bit(value: &mut u64, mask: u64, enabled: bool) {
     if enabled {
         *value |= mask
@@ -272,6 +339,9 @@ pub(crate) fn read_field(file: &File, field: &Field) -> Result<FieldValue, Foldr
         Field::Xattr { name } => Ok(FieldValue::Bytes {
             value: platform::read_xattr(file, name)?,
         }),
+        Field::FinderTags => Ok(FieldValue::Bytes {
+            value: platform::tags::read_finder_tags_raw(file)?,
+        }),
         Field::Mode => Ok(FieldValue::Mode {
             value: file.metadata()?.mode() & 0o7777,
         }),
@@ -284,6 +354,9 @@ fn write_field(file: &File, field: &Field, value: &FieldValue) -> Result<(), Fol
     match (field, value) {
         (Field::Xattr { name }, FieldValue::Bytes { value }) => {
             platform::write_xattr(file, name, value.as_deref())
+        }
+        (Field::FinderTags, FieldValue::Bytes { value }) => {
+            platform::tags::write_finder_tags_raw(file, value.as_deref())
         }
         (Field::Mode, FieldValue::Mode { value }) => {
             file.set_permissions(fs::Permissions::from_mode(*value))?;
@@ -310,6 +383,13 @@ fn apply_inner(
         ));
     }
     for change in &plan.changes {
+        if change.field == Field::FinderTags {
+            for value in [&change.before, &change.after] {
+                if let FieldValue::Bytes { value } = value {
+                    platform::tags::validate_finder_tags_write(&file, value.as_deref())?;
+                }
+            }
+        }
         if read_field(&file, &change.field)? != change.before {
             return Err(FoldrError::Conflict(
                 "folder properties changed since planning".into(),
@@ -331,7 +411,7 @@ fn apply_inner(
         std::process::id()
     );
     let mut record = ChangeRecord {
-        schema_version: 1,
+        schema_version: plan.schema_version,
         id,
         path: plan.path.clone(),
         identity: plan.identity.clone(),
@@ -395,7 +475,7 @@ fn apply_inner(
     Ok(record)
 }
 fn validate_plan(plan: &ChangePlan) -> Result<(), FoldrError> {
-    if plan.schema_version != 1 {
+    if !matches!(plan.schema_version, 1 | 2) {
         return Err(FoldrError::InvalidInput("unsupported change schema".into()));
     }
     let mut seen = BTreeSet::new();
@@ -413,7 +493,7 @@ fn validate_plan(plan: &ChangePlan) -> Result<(), FoldrError> {
         let paired = matches!(
             (&change.field, &change.before, &change.after),
             (
-                Field::Xattr { .. },
+                Field::Xattr { .. } | Field::FinderTags,
                 FieldValue::Bytes { .. },
                 FieldValue::Bytes { .. }
             ) | (
@@ -447,6 +527,18 @@ fn validate_plan(plan: &ChangePlan) -> Result<(), FoldrError> {
                     FoldrError::InvalidInput("foldr metadata keys must be UTF8".into())
                 })?;
                 metadata_name(key)?;
+            }
+            Field::FinderTags => {
+                if plan.schema_version != 2 {
+                    return Err(FoldrError::InvalidInput(
+                        "Finder tag fields require change schema 2".into(),
+                    ));
+                }
+                for value in [&change.before, &change.after] {
+                    if let FieldValue::Bytes { value } = value {
+                        platform::tags::validate_finder_tags_raw(value.as_deref())?;
+                    }
+                }
             }
             Field::Mode => {
                 if !matches!(change.before,FieldValue::Mode{value} if value<=0o7777) {
@@ -482,7 +574,7 @@ pub fn undo(
     let plan = undo_plan(record)?;
     if dry_run {
         return Ok(ChangeRecord {
-            schema_version: 1,
+            schema_version: plan.schema_version,
             id: format!("preview-undo-{}", record.id),
             path: plan.path,
             identity: plan.identity,
@@ -531,7 +623,7 @@ pub fn undo_plan(record: &ChangeRecord) -> Result<ChangePlan, FoldrError> {
         });
     }
     let plan = ChangePlan {
-        schema_version: 1,
+        schema_version: record.schema_version,
         path: record.path.clone(),
         identity: record.identity.clone(),
         changes,
@@ -543,14 +635,14 @@ pub fn undo_plan(record: &ChangeRecord) -> Result<ChangePlan, FoldrError> {
     Ok(plan)
 }
 fn validate_record(record: &ChangeRecord) -> Result<(), FoldrError> {
-    if record.schema_version != 1 {
+    if !matches!(record.schema_version, 1 | 2) {
         return Err(FoldrError::Unsupported(format!(
             "unsupported recovery schema {}",
             record.schema_version
         )));
     }
     validate_plan(&ChangePlan {
-        schema_version: 1,
+        schema_version: record.schema_version,
         path: record.path.clone(),
         identity: record.identity.clone(),
         changes: record
@@ -747,6 +839,107 @@ pub fn history(state_dir: &Path) -> Result<Vec<ChangeRecord>, FoldrError> {
     records.sort_by(|a, b| a.id.cmp(&b.id));
     Ok(records)
 }
+/// A summary describes durable journal states; it does not infer current values.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum RecordStatus {
+    Complete,
+    Partial,
+    Interrupted,
+    Failed,
+}
+impl ChangeRecord {
+    pub fn status(&self) -> RecordStatus {
+        if self.succeeded() {
+            RecordStatus::Complete
+        } else if self.fields.iter().any(|f| f.status == ChangeStatus::Failed) {
+            if self
+                .fields
+                .iter()
+                .any(|f| f.status == ChangeStatus::Applied)
+            {
+                RecordStatus::Partial
+            } else {
+                RecordStatus::Failed
+            }
+        } else {
+            RecordStatus::Interrupted
+        }
+    }
+}
+#[derive(Clone, Debug, Default)]
+pub struct HistoryQuery {
+    pub path: Option<std::path::PathBuf>,
+    pub limit: Option<usize>,
+}
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct HistoryEntry {
+    pub record: ChangeRecord,
+    pub status: RecordStatus,
+    pub matched_path: Option<EncodedPath>,
+    pub renamed: bool,
+}
+/// Read journals without creating state, selecting by current directory identity.
+/// The canonical path is explanatory; only device/inode decide a path match.
+pub fn history_query(
+    state_dir: &Path,
+    query: &HistoryQuery,
+) -> Result<Vec<HistoryEntry>, FoldrError> {
+    if query.limit == Some(0) {
+        return Err(FoldrError::InvalidInput(
+            "history limit must be greater than zero".into(),
+        ));
+    }
+    let target = query
+        .path
+        .as_ref()
+        .map(|path| {
+            let file = open_directory(path, true)?;
+            let id = identity(&file.metadata()?);
+            let canonical = fs::canonicalize(path)?;
+            if identity(&fs::metadata(&canonical)?) != id {
+                return Err(FoldrError::Conflict(
+                    "folder changed while filtering history".into(),
+                ));
+            }
+            Ok::<_, FoldrError>((id, EncodedPath::new(canonical)))
+        })
+        .transpose()?;
+    let mut records = history(state_dir)?;
+    if let Some((id, _)) = &target {
+        records.retain(|record| record.identity == *id);
+    }
+    // Journal IDs begin with nanoseconds, not lexically fixed-width timestamps.
+    fn timestamp(id: &str) -> u128 {
+        id.split('-')
+            .next()
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(0)
+    }
+    records.sort_by(|a, b| {
+        timestamp(&b.id)
+            .cmp(&timestamp(&a.id))
+            .then_with(|| b.id.cmp(&a.id))
+    });
+    if let Some(limit) = query.limit {
+        records.truncate(limit);
+    }
+    Ok(records
+        .into_iter()
+        .map(|record| {
+            let matched_path = target.as_ref().map(|(_, path)| path.clone());
+            let renamed = matched_path
+                .as_ref()
+                .is_some_and(|path| path.bytes != record.path.bytes);
+            HistoryEntry {
+                status: record.status(),
+                record,
+                matched_path,
+                renamed,
+            }
+        })
+        .collect())
+}
 pub fn load_record(state_dir: &Path, id: &str) -> Result<ChangeRecord, FoldrError> {
     if id.is_empty() || !id.bytes().all(|b| b.is_ascii_digit() || b == b'-') {
         return Err(FoldrError::InvalidInput("invalid change ID".into()));
@@ -758,8 +951,23 @@ fn load_record_path(path: &Path) -> Result<ChangeRecord, FoldrError> {
         .read(true)
         .custom_flags(libc::O_NOFOLLOW)
         .open(path)?;
-    let record = serde_json::from_reader(file).map_err(|e| FoldrError::Journal(e.to_string()))?;
-    validate_record(&record)?;
+    let record = serde_json::from_reader(file).map_err(|e| {
+        FoldrError::Journal(format!(
+            "invalid recovery record {}: {e}",
+            escape_bytes(path.as_os_str().as_encoded_bytes())
+        ))
+    })?;
+    validate_record(&record).map_err(|error| {
+        let message = format!(
+            "invalid recovery record {}: {error}",
+            escape_bytes(path.as_os_str().as_encoded_bytes())
+        );
+        if matches!(error, FoldrError::Unsupported(_)) {
+            FoldrError::Unsupported(message)
+        } else {
+            FoldrError::Journal(message)
+        }
+    })?;
     Ok(record)
 }
 
@@ -773,6 +981,301 @@ mod tests {
         let folder = root.join("folder");
         fs::create_dir(&folder).unwrap();
         (temp, folder, root.join("state"))
+    }
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn typed_tag_partial_recovery_preserves_exact_raw_and_foreign_bytes() {
+        use platform::tags::*;
+        let (_temp, target, state) = folder();
+        let file = File::open(&target).unwrap();
+        // XML bytes are intentionally noncanonical: undo must restore these exactly.
+        let original = "<?xml version=\"1.0\"?><plist version=\"1.0\"><array><string>研究 🟣\n6</string><string>keep\n4</string></array></plist>".as_bytes();
+        write_finder_tags_raw(&file, Some(original)).unwrap();
+        let mut info: Vec<u8> = (0..32).collect();
+        info[9] &= !0x0e;
+        platform::write_xattr(&file, FINDER_INFO, Some(&info)).unwrap();
+        platform::write_xattr(&file, b"com.example.foreign", Some(&[0, 255, 7])).unwrap();
+        let before = file.metadata().unwrap();
+        let desired_mode = if before.mode() & 0o7777 == 0o700 {
+            0o750
+        } else {
+            0o700
+        };
+        let request = ChangeRequest {
+            finder_tags: Some(vec!["研究 🟣".into(), "added".into()]),
+            mode: Some(desired_mode),
+            ..Default::default()
+        };
+        let proposed = plan(&target, &request, false).unwrap();
+        assert_eq!(proposed.schema_version, 2);
+        assert_eq!(proposed.changes[0].field, Field::FinderTags);
+        assert_eq!(
+            read_finder_tags_raw(&file).unwrap(),
+            Some(original.to_vec())
+        );
+        assert!(!state.exists());
+        let record = apply_inner(&proposed, &state, None, Some(1)).unwrap();
+        assert_eq!(record.schema_version, 2);
+        assert_eq!(record.status(), RecordStatus::Partial);
+        assert_eq!(record.fields[0].status, ChangeStatus::Applied);
+        assert_eq!(
+            read_finder_tags(&file).unwrap(),
+            vec![
+                FinderTag {
+                    name: "研究 🟣".into(),
+                    color: Some(6)
+                },
+                FinderTag {
+                    name: "added".into(),
+                    color: Some(0)
+                }
+            ]
+        );
+        assert_eq!(load_record(&state, &record.id).unwrap(), record);
+        assert!(undo(&record, &state, false).unwrap().succeeded());
+        assert_eq!(
+            read_finder_tags_raw(&file).unwrap(),
+            Some(original.to_vec())
+        );
+        assert_eq!(
+            platform::read_xattr(&file, FINDER_INFO).unwrap(),
+            Some(info)
+        );
+        assert_eq!(
+            platform::read_xattr(&file, b"com.example.foreign").unwrap(),
+            Some(vec![0, 255, 7])
+        );
+        assert_eq!(file.metadata().unwrap().mode(), before.mode());
+    }
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn typed_tags_refuse_schema_malformed_namespace_and_external_conflicts() {
+        use platform::tags::*;
+        let (_temp, target, state) = folder();
+        let file = File::open(&target).unwrap();
+        let request = ChangeRequest {
+            note: Some(Some("must not write".into())),
+            finder_tags: Some(vec!["wanted".into()]),
+            ..Default::default()
+        };
+        let proposed = plan(&target, &request, false).unwrap();
+        let mut bad = proposed.clone();
+        bad.schema_version = 1;
+        assert!(apply(&bad, &state).is_err());
+        bad = proposed.clone();
+        bad.changes[1].after = FieldValue::Bytes {
+            value: Some(b"malformed".to_vec()),
+        };
+        assert!(apply(&bad, &state).is_err());
+        bad = proposed.clone();
+        bad.changes[1].field = Field::Xattr {
+            name: TAG_XATTR.to_vec(),
+        };
+        assert!(apply(&bad, &state).is_err());
+        assert_eq!(read_note(&target).unwrap(), None);
+        assert!(!state.exists());
+        write_finder_tags_raw(
+            &file,
+            Some(
+                &encode_finder_tags(&[FinderTag {
+                    name: "external".into(),
+                    color: Some(2),
+                }])
+                .unwrap(),
+            ),
+        )
+        .unwrap();
+        assert!(matches!(
+            apply(&proposed, &state),
+            Err(FoldrError::Conflict(_))
+        ));
+        assert_eq!(read_note(&target).unwrap(), None);
+        assert!(!state.exists());
+        let record = apply(&plan(&target, &request, false).unwrap(), &state).unwrap();
+        assert!(record.succeeded());
+        let raw = read_finder_tags_raw(&file).unwrap();
+        write_finder_tags_raw(
+            &file,
+            Some(
+                &encode_finder_tags(&[FinderTag {
+                    name: "changed".into(),
+                    color: Some(7),
+                }])
+                .unwrap(),
+            ),
+        )
+        .unwrap();
+        assert!(matches!(
+            undo(&record, &state, false),
+            Err(FoldrError::Conflict(_))
+        ));
+        write_finder_tags_raw(&file, raw.as_deref()).unwrap();
+        assert!(undo(&record, &state, false).unwrap().succeeded());
+        let mut wrong_record = record;
+        wrong_record.schema_version = 1;
+        assert!(undo(&wrong_record, &state, true).is_err());
+    }
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn tags_are_unsupported_before_any_mixed_field_write() {
+        let (_temp, target, state) = folder();
+        let request = ChangeRequest {
+            note: Some(Some("must not write".into())),
+            finder_tags: Some(vec!["native".into()]),
+            ..Default::default()
+        };
+        assert!(matches!(
+            plan(&target, &request, false),
+            Err(FoldrError::Unsupported(_))
+        ));
+        assert_eq!(read_note(&target).unwrap(), None);
+        assert!(!state.exists());
+        let proposed = ChangePlan {
+            schema_version: 2,
+            path: EncodedPath::new(&target),
+            identity: identity(&fs::metadata(&target).unwrap()),
+            changes: vec![FieldChange {
+                field: Field::FinderTags,
+                before: FieldValue::Bytes { value: None },
+                after: FieldValue::Bytes { value: None },
+                scope: Scope::Folder,
+            }],
+            warnings: vec![],
+        };
+        assert!(matches!(
+            apply(&proposed, &state),
+            Err(FoldrError::Unsupported(_))
+        ));
+        assert!(!state.exists());
+    }
+    #[test]
+    fn history_query_matches_identity_and_never_rewrites_state() {
+        use std::os::unix::fs::symlink;
+        let (_temp, target, state) = folder();
+        let request = ChangeRequest {
+            note: Some(Some("private contents".into())),
+            ..Default::default()
+        };
+        let record = apply(&plan(&target, &request, false).unwrap(), &state).unwrap();
+        fs::remove_file(state.join(format!("{}.json", record.id))).unwrap();
+        for id in ["9-2", "10-1", "10-2"] {
+            let mut copy = record.clone();
+            copy.id = id.into();
+            fs::write(
+                state.join(format!("{id}.json")),
+                serde_json::to_vec(&copy).unwrap(),
+            )
+            .unwrap();
+        }
+        let before =
+            ["9-2", "10-1", "10-2"].map(|id| fs::read(state.join(format!("{id}.json"))).unwrap());
+        let renamed = target.with_file_name("renamed");
+        fs::rename(&target, &renamed).unwrap();
+        fs::create_dir(&target).unwrap();
+        let query = HistoryQuery {
+            path: Some(target.clone()),
+            limit: None,
+        };
+        assert!(history_query(&state, &query).unwrap().is_empty());
+        let query = HistoryQuery {
+            path: Some(renamed.clone()),
+            limit: Some(2),
+        };
+        let entries = history_query(&state, &query).unwrap();
+        assert_eq!(
+            entries
+                .iter()
+                .map(|e| e.record.id.as_str())
+                .collect::<Vec<_>>(),
+            ["10-2", "10-1"]
+        );
+        assert!(entries.iter().all(|e| e.renamed
+            && e.status == RecordStatus::Complete
+            && e.record.path == record.path));
+        let alias = target.with_file_name("alias");
+        symlink(&renamed, &alias).unwrap();
+        assert_eq!(
+            history_query(
+                &state,
+                &HistoryQuery {
+                    path: Some(alias),
+                    limit: Some(2)
+                }
+            )
+            .unwrap(),
+            entries
+        );
+        assert_eq!(
+            history(&state)
+                .unwrap()
+                .iter()
+                .map(|r| r.id.as_str())
+                .collect::<Vec<_>>(),
+            ["10-1", "10-2", "9-2"]
+        );
+        assert_eq!(
+            before,
+            ["9-2", "10-1", "10-2"].map(|id| fs::read(state.join(format!("{id}.json"))).unwrap())
+        );
+        assert_eq!(
+            read_note(&renamed).unwrap(),
+            Some(b"private contents".to_vec())
+        );
+        assert!(
+            history_query(
+                &state,
+                &HistoryQuery {
+                    path: None,
+                    limit: Some(0)
+                }
+            )
+            .is_err()
+        );
+        let absent = state.with_file_name("absent-state");
+        assert!(
+            history_query(&absent, &HistoryQuery::default())
+                .unwrap()
+                .is_empty()
+        );
+        assert!(!absent.exists());
+        fs::write(state.join("corrupt.json"), b"{broken").unwrap();
+        let error = history_query(&state, &HistoryQuery::default())
+            .unwrap_err()
+            .to_string();
+        assert!(error.contains("corrupt.json") && error.contains("invalid recovery record"));
+    }
+    #[test]
+    fn history_status_uses_durable_fields_and_encoded_record_paths() {
+        let (_temp, target, state) = folder();
+        let request = ChangeRequest {
+            note: Some(Some("one".into())),
+            metadata: BTreeMap::from([("two".into(), Some(vec![0, 255]))]),
+            ..Default::default()
+        };
+        let mut record = apply(&plan(&target, &request, false).unwrap(), &state).unwrap();
+        assert_eq!(record.status(), RecordStatus::Complete);
+        record.completed = false;
+        record.fields[1].status = ChangeStatus::Failed;
+        assert_eq!(record.status(), RecordStatus::Partial);
+        record.fields[0].status = ChangeStatus::Pending;
+        assert_eq!(record.status(), RecordStatus::Failed);
+        record.fields[1].status = ChangeStatus::Applying;
+        assert_eq!(record.status(), RecordStatus::Interrupted);
+        record.fields[1].status = ChangeStatus::Pending;
+        assert_eq!(record.status(), RecordStatus::Interrupted);
+        record.path = EncodedPath::from_bytes(b"recorded\xff\n".to_vec());
+        fs::write(
+            state.join(format!("{}.json", record.id)),
+            serde_json::to_vec(&record).unwrap(),
+        )
+        .unwrap();
+        assert_eq!(
+            history_query(&state, &HistoryQuery::default()).unwrap()[0]
+                .record
+                .path
+                .bytes,
+            b"recorded\xff\n"
+        );
     }
     #[test]
     fn json_note_patch_distinguishes_omission_from_removal() {
@@ -1009,7 +1512,7 @@ mod tests {
         )
         .unwrap();
         let record = ChangeRecord {
-            schema_version: 2,
+            schema_version: 3,
             id: "123".into(),
             path: plan.path,
             identity: plan.identity,

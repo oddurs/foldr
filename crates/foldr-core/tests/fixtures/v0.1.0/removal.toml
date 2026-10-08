@@ -1,0 +1,7 @@
+schema_version = 1
+
+[settings]
+remove_note = true
+remove_metadata = ["binary"]
+
+[settings.metadata]

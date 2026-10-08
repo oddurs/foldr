@@ -175,6 +175,18 @@ pub(super) fn inspect(file: &File) -> NativeInspection {
             "Access ACLs constrain this directory; default ACLs seed permissions of new children. Effective permissions also depend on mode, identity and mask.",
         ),
         Capability {
+            name: "finder_tags".into(),
+            read: CapabilityState::Unsupported {
+                reason: "Finder tags are a native macOS feature".into(),
+            },
+            write: CapabilityState::Unsupported {
+                reason: "Finder tags are a native macOS feature; no substitute metadata is written"
+                    .into(),
+            },
+            scope: Scope::Folder,
+            description: "Finder tag names and colors are unavailable on Linux.".into(),
+        },
+        Capability {
             name: "hidden".into(),
             read: CapabilityState::Unsupported {
                 reason: "Linux has no equivalent of Finder's native hidden flag".into(),

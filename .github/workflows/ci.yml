@@ -34,7 +34,7 @@ jobs:
         shell: bash
         run: |
           target/debug/foldr --help
-          test "$(target/debug/foldr --version)" = "foldr 0.1.0"
+          test "$(target/debug/foldr --version)" = "foldr 0.2.0"
           if target/debug/foldr --unknown-option; then
             echo "An unknown option should fail."
             exit 1
@@ -45,3 +45,5 @@ jobs:
         run: cargo +${{ matrix.toolchain }} doc --workspace --no-deps --locked
       - name: Check end-to-end folder workflows
         run: python3 scripts/verify-cli.py target/debug/foldr
+      - name: Check v0.2 folder profiles and native behavior
+        run: python3 scripts/verify-v020.py target/debug/foldr

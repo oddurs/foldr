@@ -48,6 +48,7 @@ jobs:
           test -s "$package_dir/share/zsh/site-functions/_foldr"
           "$package_dir/bin/foldr" --version
           python3 scripts/verify-cli.py "$package_dir/bin/foldr"
+          python3 scripts/verify-v020.py "$package_dir/bin/foldr"
       - name: Upload package
         uses: actions/upload-artifact@v4
         with:

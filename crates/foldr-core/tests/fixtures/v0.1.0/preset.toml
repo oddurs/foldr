@@ -1,0 +1,14 @@
+schema_version = 1
+
+[settings]
+note = "old note"
+remove_note = false
+remove_metadata = []
+mode = 493
+
+[settings.metadata]
+binary = [
+    0,
+    255,
+    10,
+]

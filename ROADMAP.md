@@ -75,22 +75,28 @@ Keep these as exploratory backlog items. A TUI or GUI is optional; advanced feat
 
 ## release-0.2.0 — v0.2.0 — Reusable folder profiles and clearer native behavior
 
-`##········` 11% · 1 of 9 done
+`#######···` 67% · 8 of 12 done
 
 Make foldr useful across repeated folder workflows: install a named preset once, apply it explicitly, check for drift in scripts, understand permission inheritance, and find the relevant recovery record. Continue using Rust and the existing CLI/core/native split.
 
 ### planned
 
-- [ ] [`0042`](https://github.com/oddurs/foldr/blob/main/cairn/items/0042-define-v0-2-0-compatibility-command-grammar-and-schema-contracts.md) Define v0.2.0 compatibility, command grammar and schema contracts <sup>docs · p0</sup>
-- [ ] [`0043`](https://github.com/oddurs/foldr/blob/main/cairn/items/0043-install-and-resolve-named-presets-in-an-explicit-user-library.md) Install and resolve named presets in an explicit user library <sup>feature · p1</sup>
-- [ ] [`0044`](https://github.com/oddurs/foldr/blob/main/cairn/items/0044-check-preset-compliance-with-scriptable-drift-results.md) Check preset compliance with scriptable drift results <sup>feature · p1</sup>
-- [ ] [`0045`](https://github.com/oddurs/foldr/blob/main/cairn/items/0045-filter-recovery-history-by-folder-and-explain-record-status.md) Filter recovery history by folder and explain record status <sup>feature · p1</sup>
-- [ ] [`0046`](https://github.com/oddurs/foldr/blob/main/cairn/items/0046-explain-directory-permissions-and-native-acl-inheritance-without-writes.md) Explain directory permissions and native ACL inheritance without writes <sup>feature · p1</sup>
-- [ ] [`0047`](https://github.com/oddurs/foldr/blob/main/cairn/items/0047-prove-finder-tag-api-preservation-and-recovery-feasibility.md) Prove Finder tag API preservation and recovery feasibility <sup>chore · p1</sup>
-- [ ] [`0048`](https://github.com/oddurs/foldr/blob/main/cairn/items/0048-edit-finder-tag-names-through-the-verified-recovery-engine.md) Edit Finder tag names through the verified recovery engine <sup>feature · p2</sup>
 - [ ] [`0049`](https://github.com/oddurs/foldr/blob/main/cairn/items/0049-verify-compatibility-and-publish-the-v0-2-0-release.md) Verify compatibility and publish the v0.2.0 release <sup>chore · p0</sup>
+
+### in progress
+
+- [ ] [`0046`](https://github.com/oddurs/foldr/blob/main/cairn/items/0046-explain-directory-permissions-and-native-acl-inheritance-without-writes.md) Explain directory permissions and native ACL inheritance without writes <sup>feature · p1</sup>
+- [ ] [`0048`](https://github.com/oddurs/foldr/blob/main/cairn/items/0048-edit-finder-tag-names-through-the-verified-recovery-engine.md) Edit Finder tag names through the verified recovery engine <sup>feature · p2</sup>
+- [ ] [`0050`](https://github.com/oddurs/foldr/blob/main/cairn/items/0050-integrate-and-verify-the-v0-2-0-implementation-team.md) Integrate and verify the v0.2.0 implementation team <sup>chore · p0</sup>
 
 ### done
 
 - [x] [`0040`](https://github.com/oddurs/foldr/blob/main/cairn/items/0040-plan-the-v0-2-0-release-after-the-first-public-cli-release.md) Plan the v0.2.0 release after the first public CLI release <sup>docs · p0</sup>
+- [x] [`0042`](https://github.com/oddurs/foldr/blob/main/cairn/items/0042-define-v0-2-0-compatibility-command-grammar-and-schema-contracts.md) Define v0.2.0 compatibility, command grammar and schema contracts <sup>docs · p0</sup>
+- [x] [`0043`](https://github.com/oddurs/foldr/blob/main/cairn/items/0043-install-and-resolve-named-presets-in-an-explicit-user-library.md) Install and resolve named presets in an explicit user library <sup>feature · p1</sup>
+- [x] [`0044`](https://github.com/oddurs/foldr/blob/main/cairn/items/0044-check-preset-compliance-with-scriptable-drift-results.md) Check preset compliance with scriptable drift results <sup>feature · p1</sup>
+- [x] [`0045`](https://github.com/oddurs/foldr/blob/main/cairn/items/0045-filter-recovery-history-by-folder-and-explain-record-status.md) Filter recovery history by folder and explain record status <sup>feature · p1</sup>
+- [x] [`0047`](https://github.com/oddurs/foldr/blob/main/cairn/items/0047-prove-finder-tag-api-preservation-and-recovery-feasibility.md) Prove Finder tag API preservation and recovery feasibility <sup>chore · p1</sup>
+- [x] [`0051`](https://github.com/oddurs/foldr/blob/main/cairn/items/0051-reject-malformed-preset-mode-values-and-duplicate-note-sources-before-compliance.md) Reject malformed preset mode values and duplicate note sources before compliance <sup>bug · p1</sup>
+- [x] [`0052`](https://github.com/oddurs/foldr/blob/main/cairn/items/0052-prepare-version-0-2-0-for-native-release-verification.md) Prepare version 0.2.0 for native release verification <sup>chore · p0</sup>
 
