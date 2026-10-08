@@ -75,7 +75,7 @@ Keep these as exploratory backlog items. A TUI or GUI is optional; advanced feat
 
 ## release-0.2.0 — v0.2.0 — Reusable folder profiles and clearer native behavior
 
-`··········` 0% · 0 of 9 done
+`##········` 11% · 1 of 9 done
 
 Make foldr useful across repeated folder workflows: install a named preset once, apply it explicitly, check for drift in scripts, understand permission inheritance, and find the relevant recovery record. Continue using Rust and the existing CLI/core/native split.
 
@@ -90,7 +90,7 @@ Make foldr useful across repeated folder workflows: install a named preset once,
 - [ ] [`0048`](https://github.com/oddurs/foldr/blob/main/cairn/items/0048-edit-finder-tag-names-through-the-verified-recovery-engine.md) Edit Finder tag names through the verified recovery engine <sup>feature · p2</sup>
 - [ ] [`0049`](https://github.com/oddurs/foldr/blob/main/cairn/items/0049-verify-compatibility-and-publish-the-v0-2-0-release.md) Verify compatibility and publish the v0.2.0 release <sup>chore · p0</sup>
 
-### in progress
+### done
 
-- [ ] [`0040`](https://github.com/oddurs/foldr/blob/main/cairn/items/0040-plan-the-v0-2-0-release-after-the-first-public-cli-release.md) Plan the v0.2.0 release after the first public CLI release <sup>docs · p0</sup>
+- [x] [`0040`](https://github.com/oddurs/foldr/blob/main/cairn/items/0040-plan-the-v0-2-0-release-after-the-first-public-cli-release.md) Plan the v0.2.0 release after the first public CLI release <sup>docs · p0</sup>
 
