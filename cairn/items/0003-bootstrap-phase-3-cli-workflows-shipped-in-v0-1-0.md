@@ -2,12 +2,12 @@
 id: 3
 uid: 5463ec68-306e-4f59-ae1c-21674af90d36
 key: v0.3
-title: v0.3 — Everyday CLI workflows
+title: Bootstrap phase 3 — CLI workflows (shipped in v0.1.0)
 type: milestone
 status: done
 assignee: integration-lead
 created: 2026-10-02
-updated: 2026-10-02
+updated: 2026-10-07
 closed_at: 2026-10-02
 priority: p1
 effort: l
@@ -27,3 +27,7 @@ All scheduled diff, explicit batch, shell integration, packaging and team integr
 ## Result
 
 Everyday CLI milestone implemented and verified: semantic diffs, explicit batches, completions/man, source installation and tested native archives. All scheduled child items are done; optional exploratory interfaces and filesystem policies remain later backlog.
+
+## 2026-10-07
+
+Historical bootstrap milestone: this phase shipped in public v0.1.0. Its original key is preserved for reference integrity; actual next release planning is0041 with key release-0.2.0.

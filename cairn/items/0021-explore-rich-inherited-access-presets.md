@@ -8,7 +8,7 @@ milestone: later
 depends_on:
 - 17
 created: 2026-10-02
-updated: 2026-10-02
+updated: 2026-10-07
 priority: p2
 effort: m
 area: permissions
@@ -27,3 +27,7 @@ Investigate separate macOS ACL and Linux default-ACL adapters. Explain ACL masks
 - [ ] A supported semantics matrix and representative fixtures are recorded.
 - [ ] Proposed changes show effective access and scope before writes.
 - [ ] Implementation only proceeds through the shared change/recovery engine.
+
+## 2026-10-07
+
+v0.2.0 item0046 takes the bounded read-only explanation work. Rich inherited ACL writes stay here in later backlog.

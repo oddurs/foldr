@@ -47,7 +47,7 @@ Items are numbered: `0012`, and commands accept the bare number too. Write the n
 - **`priority`**: one of p0, p1, p2, p3 — p0 is a release blocker
 - **`effort`**: one of s, m, l, xl — Rough size, not an estimate
 - **`area`**: free text — Subsystem this touches
-- **Milestones**: `v0.1`, `v0.2`, `v0.3`, `later`
+- **Milestones**: `v0.1`, `v0.2`, `v0.3` (historical bootstrap phases shipped in v0.1.0), `release-0.2.0`, `later`
 - **Saved views** (`cairn list --view NAME`): `now`, `next`, `triage`
 
 ### Rules
